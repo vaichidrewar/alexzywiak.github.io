@@ -1,0 +1,212 @@
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
+
+If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sun, 18 Oct 2015 21:37:29 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Setting Up Sublime Linter in Sublime Text 3</title><description>&lt;p&gt;Syntax errors suck.  They're pretty much like the worst.  We've all been there.  You have a moment of transcendental inspiration, you hack out some of the most erudite, lucid code you've ever created, hit save, and wait for the fruits of your flawless genius to unfold.  But then everything comes&lt;/p&gt;</description><link>http://localhost:2368/setting-up-sublime-linter-in-sublime-text-3/</link><guid isPermaLink="false">42911685-2cd7-4bc9-bc52-06e8bd4289cc</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Thu, 15 Oct 2015 17:09:18 GMT</pubDate><content:encoded>&lt;p&gt;Syntax errors suck.  They're pretty much like the worst.  We've all been there.  You have a moment of transcendental inspiration, you hack out some of the most erudite, lucid code you've ever created, hit save, and wait for the fruits of your flawless genius to unfold.  But then everything comes crashing down around you like a flaming house of cards hitting a fan, or something roughly equivalent.  The culprit?  Some misplaced comma on line 238 that takes you an hour and half to find.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Enter Sublime Linter&lt;/strong&gt;.  Catch those malevolent little errors before they illicit any hair pulling.  &lt;/p&gt;
+
+&lt;p&gt;Installation is simple, but has a few steps.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Step One - Install SublimeLinter Package&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;If you have Package Manager installed on Sublime &lt;code&gt;cmd + shift + p&lt;/code&gt; and open that sucker up.  &lt;/p&gt;
+
+&lt;p&gt;(If you don't, time to get out from under the Subliminal Rock &lt;a src="https://packagecontrol.io/"&gt;packagemanager.io&lt;/a&gt;)  &lt;/p&gt;
+
+&lt;p&gt;Got to: &lt;code&gt;Package Control: Install Package --&gt; SublimeLinter&lt;/code&gt; and install it.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Step Two - Install Linters&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;SublimeLinter alone, as the Package Control Messages page emphatically states, doesn't do anything.  In order to get at the lintfree goodness that is clean code, you have to install language specific linters first.&lt;/p&gt;
+
+&lt;p&gt;In this case, we'll go ahead and install jshint to act as our linter.&lt;/p&gt;
+
+&lt;p&gt;Back in package manager: &lt;code&gt;Package Control: Install Package --&gt; SublimeLinter-jshint&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;On the new Package Control Messages Page, at the bottom you will have a new section referring specifically to jshint.  &lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Step Three - Install jshint node package&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;We're getting there, one more step to get this working!  jshint makes use of a Node package that must be installed separately on your machine.&lt;/p&gt;
+
+&lt;p&gt;If you have &lt;code&gt;node&lt;/code&gt; and &lt;code&gt;npm&lt;/code&gt; on your computer already, run the following command to install jshint globally so SublimeLinter can get at it.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;npm install -g jshint&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;If you have no idea what this node stuff is all about, check out more detailed instructions here. &lt;br&gt;
+&lt;a src="https://github.com/SublimeLinter/SublimeLinter-jshint"&gt;https://github.com/SublimeLinter/SublimeLinter-jshint&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;At this point you should be up and running!  Head into a .js file in Sublime, type out the most heinous syntax errors you can think of, and bask in their yellow outlined ostracism!  &lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Step Four - Changing JShint Configuration&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;So you're psyched, your totally free of unwanted lintyness, but your JSHint isn't playing nice with jQuery.  It especially doesn't like '$' which, it correctly although rather narrowly, tells you is not defined.  &lt;/p&gt;
+
+&lt;p&gt;To change the linting configuration, you need to add a file called &lt;code&gt;.jshintrc&lt;/code&gt; into your project folder. &lt;/p&gt;
+
+&lt;p&gt;The file allows you to use object notation to customize the way Jshint works.  For example, to stop any errors on the jQuery '$' object, enter  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{  
+  "globals": {
+      "$": false
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For your reference, here is a full list of options that can be modified in the &lt;code&gt;.jshintrc&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;&lt;a src="http://jshint.com/docs/options/"&gt;http://jshint.com/docs/options/&lt;/a&gt;&lt;/p&gt;</content:encoded></item><item><title>In a .bind about how to .apply .call?</title><description>&lt;p&gt;You can really tell the True JS Ninjas from the Codeacademicians when it comes to proper use of &lt;code&gt;.call()&lt;/code&gt;, &lt;code&gt;.apply()&lt;/code&gt;, and &lt;code&gt;.bind()&lt;/code&gt;.  &lt;/p&gt;
+
+&lt;p&gt;All three are methods available on the JS &lt;code&gt;function&lt;/code&gt; prototype and are used to &lt;strong&gt; reassign the value of &lt;code&gt;this&lt;/code&gt; within the calling function.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The three functions differ in&lt;/p&gt;</description><link>http://localhost:2368/in-a-bind-about-how-apply-call/</link><guid isPermaLink="false">e806b939-3b5f-4e75-9843-96ae903a86e1</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Mon, 12 Oct 2015 00:08:39 GMT</pubDate><content:encoded>&lt;p&gt;You can really tell the True JS Ninjas from the Codeacademicians when it comes to proper use of &lt;code&gt;.call()&lt;/code&gt;, &lt;code&gt;.apply()&lt;/code&gt;, and &lt;code&gt;.bind()&lt;/code&gt;.  &lt;/p&gt;
+
+&lt;p&gt;All three are methods available on the JS &lt;code&gt;function&lt;/code&gt; prototype and are used to &lt;strong&gt; reassign the value of &lt;code&gt;this&lt;/code&gt; within the calling function.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The three functions differ in how they accept arguments, in the case of &lt;code&gt;.call()&lt;/code&gt; and &lt;code&gt;.apply()&lt;/code&gt;, and whether they invoke the function or return a new function, as in the case of &lt;code&gt;.bind()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;As with all things code, it is much easier to explain in an example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;
+var homer = {
+    name: 'Homer',
+    catchPhrase : 'D\'Oh!',
+    activity : function(){
+      console.log('Mmmm ' + this.name + ' likes Duff!');
+    }
+};
+
+var barney = {
+    name: 'Barney',
+    catchPhrase : 'Buuuuurp!'
+};
+
+var speak = function(greeting1, greeting2){
+    greeting = greeting1 + greeting2 || '';
+    console.log(greeting + this.catchPhrase);
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, Homer and Barney are gregarious guys.  They need to be able to speak!  But, oh no!  &lt;code&gt;speak()&lt;/code&gt; is not a native function to either of them!  &lt;code&gt;this.catchphrase&lt;/code&gt; is doomed to be &lt;code&gt;undefined!&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;speak() ==&gt; undefined&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;.call()&lt;/strong&gt; &lt;br&gt;
+&lt;code&gt;.call(context, arg1, arg2...)&lt;/code&gt; &lt;br&gt;
+The first argument that &lt;code&gt;.call()&lt;/code&gt; accepts will be what is bound to the &lt;code&gt;this&lt;/code&gt; keyword inside the function.&lt;/p&gt;
+
+&lt;p&gt;Here, &lt;code&gt;homer&lt;/code&gt; is passed as the first argument to &lt;code&gt;.call()&lt;/code&gt; and so &lt;code&gt;homer&lt;/code&gt; becomes bound as &lt;code&gt;this&lt;/code&gt; within the &lt;code&gt;speak()&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;speak.call(homer) ==&gt; "D'Oh!"
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Subsequent arguments can be passed into &lt;code&gt;.call()&lt;/code&gt; and they will be passed to the calling function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;speak.call(homer, 'Hi, Marge! ', ' Hi, Barney! ') ==&gt; "Hi, Marge! Hi, Barney! D'Oh!"
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;.apply()&lt;/strong&gt; &lt;br&gt;
+&lt;code&gt;.apply(context, [arg list])&lt;/code&gt; &lt;br&gt;
+&lt;code&gt;.apply()&lt;/code&gt; works in almost the same way as &lt;code&gt;.call()&lt;/code&gt;.  The only difference between the two is the type of arguments they accept.  &lt;code&gt;.apply()&lt;/code&gt; will accept a single array or array-like object containing all of the arguments to be passed, whereas &lt;code&gt;.call()&lt;/code&gt; accepts a comma separated list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;speak.apply(barney, ['Hi Moe! ', 'Hey Homer!']); ==&gt; "Hi Moe! Hey Homer! Buuuuurp!"&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice how the values in the array object passed into &lt;code&gt;.apply()&lt;/code&gt; will be passed in order as the parameters to the calling function.&lt;/p&gt;
+
+&lt;p&gt;The real place these function methods shine through is you can call non-native methods bound to different objects without having to set them as properties on those objects.&lt;/p&gt;
+
+&lt;p&gt;Homer loves drinking beer.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var homer = {
+    name: 'Homer',
+    catchPhrase : 'D\'Oh!',
+    drinkBeer : function(){
+      console.log('Mmmm ' + this.name + ' likes Duff!');
+    }
+};
+
+homer.drinkBeer(); ===&gt; "Mmmm Homer likes Duff!"&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But Barney loves drinking beer, too!  But he doesn't have a &lt;code&gt;.drinkBeer()&lt;/code&gt; method. How can Homer share his favorite activity?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;
+homer.drinkBeer.call(barney); ===&gt; "Mmmm Barney likes Duff!"&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The same function is called, &lt;code&gt;homer.drinkBeer()&lt;/code&gt;, but by using &lt;code&gt;.call()&lt;/code&gt; we can change the context to bind &lt;code&gt;this&lt;/code&gt; to &lt;code&gt;barney&lt;/code&gt; instead.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;.bind()&lt;/strong&gt; &lt;br&gt;
+&lt;code&gt;.bind(context, arg1, arg2....)&lt;/code&gt; &lt;br&gt;
+&lt;code&gt;.bind()&lt;/code&gt; has a similar function, but works in a fundamentally different way.  &lt;code&gt;.apply()&lt;/code&gt; and &lt;code&gt;.call()&lt;/code&gt; both &lt;em&gt;invoke&lt;/em&gt; the calling function when they are called.  &lt;code&gt;.bind()&lt;/code&gt; &lt;strong&gt;returns a function reference&lt;/strong&gt; with the &lt;code&gt;this&lt;/code&gt; keyword properly bound.&lt;/p&gt;
+
+&lt;p&gt;When Homer and Barney are at Moe's Tavern, they rarely stop at one.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var getDrunk = function(cb){
+    for(var i = 0; i &lt; 6; i++){
+        cb();
+    }
+};&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;.getDrunk()&lt;/code&gt; accepts a callback and runs it six times.  Sounds like a good way to &lt;code&gt;.drinkBeer()&lt;/code&gt;!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;getDrunk(homer.drinkBeer); ===&gt; "Mmmm Homer likes Duff!"...x6
+getDrunk(homer.drinkBeer.call(barney)); ===&gt; undefined...x6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;.call()&lt;/code&gt; and &lt;code&gt;.apply()&lt;/code&gt; invoked the function when they are called and don't return anything so they cannot be used when a function reference is required.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;.bind()&lt;/code&gt; will return a reference to a new function with the&lt;code&gt;this&lt;/code&gt; keyword context properly bound.  It accepts additional arguments the same way as &lt;code&gt;.call()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Huh... &lt;br&gt;
+&lt;code&gt;fn.bind(context, arg1, arg2....)&lt;/code&gt; will return the following function.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;function(){
+  return fn.call(context, arg1, arg2....);
+};&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So Barney can get cranked at Moe's too!  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;getDrunk(homer.drinkBeer.bind(barney); ===&gt; "Mmmm Barney likes Duff!"...x6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;.bind()&lt;/code&gt; acts as a closure, so it will create a new function and return a reference to it.  If you need to use that bound function multiple times, you can save it as a variable with all the properly bound &lt;code&gt;this&lt;/code&gt; goodness you could want.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;
+var drinkBeerBarney = homer.drinkBeer.bind(barney);
+
+typeof drinkBeerBarney ===&gt; 'function'
+
+getDrunk(drinkBeerBarney); ===&gt; "Mmmm Barney likes Duff!"...x6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So hopefully that will move you on your way toward some JS function binding context-fu mastery.  At least it should give you a hankering for a beer, so my job is done.&lt;/p&gt;</content:encoded></item><item><title>Setting Tab/Space Standards in Sublime Text</title><description>&lt;p&gt;An analogy for you; Properly indented code is to mixed spaces and tabs as  Oxford's English Dictionary is to a horde of tasmanian devils in a swimming pool full of scrabble letters.  &lt;/p&gt;
+
+&lt;p&gt;Yeah, properly indenting code is important.  It may look pretty in your editor, but on git or elsewhere&lt;/p&gt;</description><link>http://localhost:2368/setting-tab-space-standards-in-sublime-text/</link><guid isPermaLink="false">3e378150-39fe-414c-8a74-d32902fc2473</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 09 Oct 2015 21:13:33 GMT</pubDate><content:encoded>&lt;p&gt;An analogy for you; Properly indented code is to mixed spaces and tabs as  Oxford's English Dictionary is to a horde of tasmanian devils in a swimming pool full of scrabble letters.  &lt;/p&gt;
+
+&lt;p&gt;Yeah, properly indenting code is important.  It may look pretty in your editor, but on git or elsewhere out in the real world, it could look like a tangled mess if you're not consistent.&lt;/p&gt;
+
+&lt;p&gt;I'm going to cover how to change the default tab settings in Sublime.&lt;/p&gt;
+
+&lt;p&gt;To get going, navigate over to: &lt;br&gt;
+&lt;strong&gt;Sublime Text &gt; Preferences &gt; Settings - User&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Settings in Sublime are controlled using JSON notation.  &lt;/p&gt;
+
+&lt;p&gt;While playing around in there, you can modify your tab settings with the following commands.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;"tab_size":Number&lt;/code&gt; &lt;br&gt;
+Set it equal to the number of spaces per tab. &lt;br&gt;
+Default value is 4.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;"translateTabsToSpaces":true/false&lt;/code&gt; &lt;br&gt;
+If true, all tab keypresses will be recorded as the number of spaces specified in "tab_size" instead of a tab character.  Visually, the tab key will function the same, but there will be no tab characters whatsoever. &lt;br&gt;
+Default value is false.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;"useTabStops":true/false&lt;/code&gt; &lt;br&gt;
+If true, will set tab and backspace to add/delete up to the closest tab stop regardless of whether it's a tab character or a series of spaces. &lt;br&gt;
+Defaults to true.&lt;/p&gt;
+
+&lt;p&gt;Here is an example of setting all tabs to be recorded as two spaces as per HR style guide.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+  "tab_size":2,
+  "translateTabsToSpaces":true,
+  "useTabStops":true
+}&lt;/code&gt;&lt;/pre&gt;</content:encoded></item></channel></rss>
