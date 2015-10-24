@@ -1,6 +1,127 @@
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
 
-If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sun, 18 Oct 2015 23:24:44 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Animating Keyboard Events in d3</title><description>&lt;p&gt;d3 can do some serious data, but it is also a pretty sweet tool to animate user input.  &lt;/p&gt;
+If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sat, 24 Oct 2015 22:04:56 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Audio Visualiser Using D3</title><description>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+
+&lt;p&gt;Check out the full code &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set&lt;/strong&gt;&lt;/p&gt;</description><link>http://localhost:2368/audio-visualiser-using-d3/</link><guid isPermaLink="false">a9984624-d736-432f-8dc4-d0d584f213c1</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 24 Oct 2015 21:43:46 GMT</pubDate><content:encoded>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+
+&lt;p&gt;Check out the full code &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up index.html&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To get at some tunes, I'm going to use an HTML5 &lt;code&gt;audio&lt;/code&gt; tag with &lt;code&gt;id=player&lt;/code&gt; right in &lt;code&gt;index.html&lt;/code&gt; and just source the audio from a local file.  We can also tack on a &lt;code&gt;div&lt;/code&gt; with and &lt;code&gt;id="visualiser"&lt;/code&gt; for housing our visualiser.  Make sure to load up &lt;code&gt;d3&lt;/code&gt; and &lt;code&gt;jQuery&lt;/code&gt; while you're at it too!  &lt;/p&gt;
+
+&lt;p&gt;If you're using a local audio file, you need to set up a localhost server and not just open the html file directly from your browser. Without a local server, you'll get a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS"&gt;CORS Access Restriction&lt;/a&gt; error when you try and run the visualiser!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Grabbing the AudioContext()&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Next, we're going create an &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext"&gt;AudioContext&lt;/a&gt; object, &lt;code&gt;context&lt;/code&gt;, so we can get at all those sweet frequencies.  &lt;/p&gt;
+
+&lt;pre&gt;
+$(function(){
+    var context = new AudioContext();
+});
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Create an AnalyserNode&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;We'll use the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createAnalyser"&gt;createAnalyser&lt;/a&gt; method on the &lt;code&gt;context&lt;/code&gt; object to create an &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode"&gt;AnalyserNode&lt;/a&gt;, &lt;code&gt;analyser&lt;/code&gt;, that will provide us with the real time frequency data we're looking for.&lt;/p&gt;
+
+&lt;p&gt;Then we'll set what essentially amounts to the resolution of our &lt;code&gt;analyser&lt;/code&gt; object by setting its &lt;code&gt;fftSize&lt;/code&gt; property.  The &lt;code&gt;fftSize&lt;/code&gt; must be a power of 2 for some mathematically magical reason. The higher the resolution, the sharper the visualiser, but we'll end up animating animating exponentially more elements which can take a toll.  I've found that 512 to 1024 is a good balance between resolution and performance, but feel free to play around with it and see what you can do.  &lt;/p&gt;
+
+&lt;p&gt;Finally, we'll create a &lt;code&gt;frequencyData&lt;/code&gt; array which is what we'll ultimately pass as data to d3 to power our visualisation.  &lt;/p&gt;
+
+&lt;pre&gt;$(function() {
+    var context = new AudioContext();
+    var analyser = context.createAnalyser();
+    analyser.fftSize = 64;
+    var frequencyData = new Uint8Array(analyser.frequencyBinCount);
+});
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Connect Our Analyser&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Next up, we have to route our tunes through our &lt;code&gt;analyser&lt;/code&gt;.  Using &lt;code&gt;jQuery&lt;/code&gt;, we're going to grab the &lt;code&gt;audio&lt;/code&gt; HTML tag we're listening to.  We'll pass the &lt;code&gt;audio&lt;/code&gt; tag element to the &lt;code&gt;context.createMediaElementSource&lt;/code&gt; method  and set it as our &lt;code&gt;source&lt;/code&gt;.  That will allow us to get the frequency data.  We'll connect our &lt;code&gt;analyser&lt;/code&gt; to the audio &lt;code&gt;source&lt;/code&gt;, and then finally, connect our &lt;code&gt;analyser&lt;/code&gt; to &lt;code&gt;context.destination&lt;/code&gt;, in normal parlance, you speakers, so that we can once again hear the music. Check out the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode"&gt;AnaylserNode&lt;/a&gt; and &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext"&gt;AudioContext&lt;/a&gt; docs for more info on what ever the hell's going on here.&lt;/p&gt;
+
+&lt;pre&gt;$("#player").bind('canplay', function() {
+        var source = context.createMediaElementSource(this);
+        source.connect(analyser);
+        analyser.connect(context.destination);
+    });
+&lt;/pre&gt;
+
+&lt;p&gt;Our &lt;code&gt;analyser&lt;/code&gt; is all wired up to report back to us with real time info on what's playing.  To get an updated array of the frequency values, all we need to do is run &lt;code&gt;analyser.getByteFrequencyData(frequencyData)&lt;/code&gt; and the &lt;code&gt;frequencyData&lt;/code&gt; array we declared earlier, will get updated. &lt;/p&gt;
+
+&lt;p&gt;To check it out, run a little &lt;code&gt;console.log&lt;/code&gt; action.  &lt;/p&gt;
+
+&lt;pre&gt;setInterval(function(){
+  analyser.getByteFrequencyData(frequencyData);
+  console.log(frequencyData)
+}, 500);
+&lt;/pre&gt;
+
+&lt;p&gt;Once the music starts playing, you should see all kinds of numbers dancing around in the console.  Unfortunately, that's only exciting for us geeky dev types.  We'll have to up our game to get the groupies.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Visualise It&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;A constantly changing array of numbers!  D3 is all over that!  Let's set up an &lt;code&gt;svg&lt;/code&gt; element to hold our sweet visuals.&lt;/p&gt;
+
+&lt;pre&gt;var width = 800,
+        height = 600,
+        barPadding = 0;
+
+    var svg = d3.select('#visualiser')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+&lt;/pre&gt;
+
+&lt;p&gt;We'll create an ever so basic bar graph in d3 bound to the frequency information.  This visualiser is as basic as they get, but d3 has so much awesomeness, your imagination is the limit.  &lt;/p&gt;
+
+&lt;p&gt;Since we're going to be continuously updating our graph with the real time frequency data, we'll wrap drawing the graph in an &lt;code&gt;update&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;
+    var update = function(data) {
+
+        rect = svg.selectAll('rect')
+            .data(data)
+
+        rect.enter().append('rect');
+
+        rect.attr('width', function() {
+                return width / data.length - barPadding;
+            })
+            .attr('height', function(d) {
+                return d * 1000;
+            })
+            .attr('x', function(d, i) {
+                return i * width / data.length;
+            })
+            .attr('y', function(d) {
+                return height - d;
+            })
+            .attr('fill', function(d) {
+                return "rgb(0, 0, " + (d * 10) + ")";
+            });
+    };
+
+update(frequencyData);
+&lt;/pre&gt;
+
+&lt;p&gt;Lastly, we'll make use of &lt;code&gt;d3.timer()&lt;/code&gt; to run continuously run our animation.  We also have to make sure and call &lt;code&gt;analyser.getByteFrequencyData(frequencyData)&lt;/code&gt; so that we get real time audio data.  &lt;/p&gt;
+
+&lt;pre&gt;d3.timer(function() {
+        analyser.getByteFrequencyData(frequencyData);
+        update(frequencyData);
+    });
+&lt;/pre&gt;
+
+&lt;p&gt;And now, you only have one more question to answer.  Are you ready to Rock?  &lt;/p&gt;
+
+&lt;p&gt;I'm such a nerd...&lt;/p&gt;
+
+&lt;p&gt;Full code up on &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;Git&lt;/a&gt;.&lt;/p&gt;</content:encoded></item><item><title>Animating Keyboard Events in d3</title><description>&lt;p&gt;d3 can do some serious data, but it is also a pretty sweet tool to animate user input.  &lt;/p&gt;
 
 &lt;p&gt;I'll give a little run through here on how to capture keyboard events to run a little animation.  Well, to drive a little triangle around the screen using the arrow keys. &lt;br&gt;
 &lt;br&gt; &lt;br&gt;
