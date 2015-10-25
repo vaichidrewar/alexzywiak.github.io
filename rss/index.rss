@@ -1,6 +1,6 @@
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
 
-If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sat, 24 Oct 2015 22:04:56 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Audio Visualiser Using D3</title><description>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sun, 25 Oct 2015 03:24:40 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Audio Visualiser Using D3</title><description>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
 
 &lt;p&gt;Check out the full code &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -18,11 +18,10 @@ If the Printing Press started the Renaissance, what can Javascript do?</descript
 
 &lt;p&gt;Next, we're going create an &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext"&gt;AudioContext&lt;/a&gt; object, &lt;code&gt;context&lt;/code&gt;, so we can get at all those sweet frequencies.  &lt;/p&gt;
 
-&lt;pre&gt;
-$(function(){
+&lt;pre&gt;&lt;code class="language-javascript"&gt;$(function(){
     var context = new AudioContext();
 });
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;strong&gt;Create an AnalyserNode&lt;/strong&gt;&lt;/p&gt;
 
@@ -32,34 +31,34 @@ $(function(){
 
 &lt;p&gt;Finally, we'll create a &lt;code&gt;frequencyData&lt;/code&gt; array which is what we'll ultimately pass as data to d3 to power our visualisation.  &lt;/p&gt;
 
-&lt;pre&gt;$(function() {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;$(function() {
     var context = new AudioContext();
     var analyser = context.createAnalyser();
     analyser.fftSize = 64;
     var frequencyData = new Uint8Array(analyser.frequencyBinCount);
 });
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;strong&gt;Connect Our Analyser&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;Next up, we have to route our tunes through our &lt;code&gt;analyser&lt;/code&gt;.  Using &lt;code&gt;jQuery&lt;/code&gt;, we're going to grab the &lt;code&gt;audio&lt;/code&gt; HTML tag we're listening to.  We'll pass the &lt;code&gt;audio&lt;/code&gt; tag element to the &lt;code&gt;context.createMediaElementSource&lt;/code&gt; method  and set it as our &lt;code&gt;source&lt;/code&gt;.  That will allow us to get the frequency data.  We'll connect our &lt;code&gt;analyser&lt;/code&gt; to the audio &lt;code&gt;source&lt;/code&gt;, and then finally, connect our &lt;code&gt;analyser&lt;/code&gt; to &lt;code&gt;context.destination&lt;/code&gt;, in normal parlance, you speakers, so that we can once again hear the music. Check out the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode"&gt;AnaylserNode&lt;/a&gt; and &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext"&gt;AudioContext&lt;/a&gt; docs for more info on what ever the hell's going on here.&lt;/p&gt;
 
-&lt;pre&gt;$("#player").bind('canplay', function() {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;$("#player").bind('canplay', function() {
         var source = context.createMediaElementSource(this);
         source.connect(analyser);
         analyser.connect(context.destination);
     });
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Our &lt;code&gt;analyser&lt;/code&gt; is all wired up to report back to us with real time info on what's playing.  To get an updated array of the frequency values, all we need to do is run &lt;code&gt;analyser.getByteFrequencyData(frequencyData)&lt;/code&gt; and the &lt;code&gt;frequencyData&lt;/code&gt; array we declared earlier, will get updated. &lt;/p&gt;
 
 &lt;p&gt;To check it out, run a little &lt;code&gt;console.log&lt;/code&gt; action.  &lt;/p&gt;
 
-&lt;pre&gt;setInterval(function(){
+&lt;pre&gt;&lt;code class="language-javascript"&gt;setInterval(function(){  
   analyser.getByteFrequencyData(frequencyData);
   console.log(frequencyData)
 }, 500);
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Once the music starts playing, you should see all kinds of numbers dancing around in the console.  Unfortunately, that's only exciting for us geeky dev types.  We'll have to up our game to get the groupies.&lt;/p&gt;
 
@@ -67,7 +66,7 @@ $(function(){
 
 &lt;p&gt;A constantly changing array of numbers!  D3 is all over that!  Let's set up an &lt;code&gt;svg&lt;/code&gt; element to hold our sweet visuals.&lt;/p&gt;
 
-&lt;pre&gt;var width = 800,
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var width = 800,  
         height = 600,
         barPadding = 0;
 
@@ -75,14 +74,13 @@ $(function(){
         .append('svg')
         .attr('width', width)
         .attr('height', height);
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;We'll create an ever so basic bar graph in d3 bound to the frequency information.  This visualiser is as basic as they get, but d3 has so much awesomeness, your imagination is the limit.  &lt;/p&gt;
 
 &lt;p&gt;Since we're going to be continuously updating our graph with the real time frequency data, we'll wrap drawing the graph in an &lt;code&gt;update&lt;/code&gt; function.&lt;/p&gt;
 
-&lt;pre&gt;
-    var update = function(data) {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;    var update = function(data) {
 
         rect = svg.selectAll('rect')
             .data(data)
@@ -106,16 +104,16 @@ $(function(){
             });
     };
 
-update(frequencyData);
-&lt;/pre&gt;
+update(frequencyData);  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Lastly, we'll make use of &lt;code&gt;d3.timer()&lt;/code&gt; to run continuously run our animation.  We also have to make sure and call &lt;code&gt;analyser.getByteFrequencyData(frequencyData)&lt;/code&gt; so that we get real time audio data.  &lt;/p&gt;
 
-&lt;pre&gt;d3.timer(function() {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;d3.timer(function() {  
         analyser.getByteFrequencyData(frequencyData);
         update(frequencyData);
     });
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;And now, you only have one more question to answer.  Are you ready to Rock?  &lt;/p&gt;
 
@@ -133,7 +131,7 @@ update(frequencyData);
 
 &lt;p&gt;First, we need an element to hold our d3 goodness, so we'll append an &lt;code&gt;svg&lt;/code&gt; element onto the body and set its default dimensions.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;var svg = d3.select('body')
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var svg = d3.select('body')  
   .append('svg')
   .attr('height', 600)
   .attr('width', 1000);
@@ -141,7 +139,7 @@ update(frequencyData);
 
 &lt;p&gt;Next, we'll add in a triangle polygon that will eventually be controlled by the arrow keys.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;var triangle = svg.append('polygon')
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var triangle = svg.append('polygon')  
   .attr('fill', 'yellow')
   .attr('stroke', 'blue')
   .attr('stroke-width', 2)
@@ -150,17 +148,17 @@ update(frequencyData);
 
 &lt;p&gt;We have a little yellow triangle, but it's stuck way up in the corner.  Let's start it out in the center of the svg element instead.  To make storing and referencing the triangles position easier, we'll add some relevant properties to the &lt;code&gt;triangle&lt;/code&gt; object using &lt;code&gt;underscore&lt;/code&gt;'s &lt;code&gt;extend&lt;/code&gt; method.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;_.extend(triangle, {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;_.extend(triangle, {  
   x: 500,
   y: 300,
   angle: 0,
   _speed: 10
-});&lt;/code&gt;&lt;/pre&gt;
+});
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;This sets the triangle's &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; values &lt;code&gt;500&lt;/code&gt; and &lt;code&gt;300&lt;/code&gt; respectively, or what is the middle of our current svg.  These coordinates are meaningless properties until we actually place the triangle using the &lt;code&gt;transform&lt;/code&gt; attribute provided to us by d3.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;
-triangle.attr('transform', function() {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;triangle.attr('transform', function() {  
   return 'translate(' + triangle.x + ',' + triangle.y + ')';
 })
 &lt;/code&gt;&lt;/pre&gt;
@@ -173,9 +171,9 @@ triangle.attr('transform', function() {
 
 &lt;p&gt;To do so, we're going to put watchers on both the &lt;code&gt;keydown&lt;/code&gt; and &lt;code&gt;keyup&lt;/code&gt; events.  To store which keys are being pressed, we'll create an object &lt;code&gt;keyPressed&lt;/code&gt;.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;var keyPressed = {};
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var keyPressed = {};
 
-d3.select('body')
+d3.select('body')  
   .on('keydown', function() {
     keyPressed[d3.event.keyIdentifier] = true;
   })
@@ -194,7 +192,7 @@ d3.select('body')
 
 &lt;p&gt;We'll create a &lt;code&gt;moveTriangle&lt;/code&gt; function to monitor our keypresses and to change the triangle's &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; properties to appropriately respond to the arrow keys.  &lt;code&gt;moveTriangle&lt;/code&gt; will reference the &lt;code&gt;keyPressed&lt;/code&gt; object to find out what keys are currently being pressed.  We'll also add a helper function &lt;code&gt;isInBounds&lt;/code&gt; to make sure no one is flying off the screen.  (You may wonder how we're going to reference &lt;code&gt;keyPressed&lt;/code&gt; in real time, but don't worry, d3 will come through in the end.)  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;var moveTriangle = function() {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var moveTriangle = function() {
 
   var x = triangle.x;
   var y = triangle.y;
@@ -214,19 +212,20 @@ d3.select('body')
   triangle.move(x, y);
 };
 
-var isInBounds = function(n, dimension) {
-  if (n &lt; 0) {
+var isInBounds = function(n, dimension) {  
+  if (n &amp;lt; 0) {
     return 0;
-  } else if (n &gt; svg.attr(dimension)) {
+  } else if (n &amp;gt; svg.attr(dimension)) {
     return svg.attr(dimension);
   } else {
     return n;
   }
-}&lt;/code&gt;&lt;/pre&gt;
+}
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;The &lt;code&gt;moveTriangle&lt;/code&gt; effectively translates the arrow keys into new &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; coordinates on the &lt;code&gt;triangle&lt;/code&gt; object, but again, we need to make use of &lt;code&gt;translate&lt;/code&gt; to actually move the triangle on the screen.  On the last line in &lt;code&gt;moveTriangle&lt;/code&gt; we reference a &lt;code&gt;move&lt;/code&gt; method on triangle.  Let's write that now.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;triangle.move = function(x, y) {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;triangle.move = function(x, y) {  
   var dx = this.x - x;
   var dy = this.y - y;
   if (dx !== 0 || dy !== 0) {
@@ -244,7 +243,8 @@ var isInBounds = function(n, dimension) {
 &lt;strong&gt;Animate!&lt;/strong&gt; &lt;br&gt;
 All this code is well and good, but it needs a final line of d3 magic to work.  As it stands, we keep track of what keys are pressed, but the &lt;code&gt;moveTriangle&lt;/code&gt; function isn't being called on! How will it know when the arrows are being pressed?  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;d3.timer(moveTriangle);&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-javascript"&gt;d3.timer(moveTriangle);  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Toss that little line in there, and have fun!  d3's &lt;code&gt;timer&lt;/code&gt; method will tie our &lt;code&gt;moveTriangle&lt;/code&gt; function smoothly into the internal gears and cogs of it's time keeping mechanisms.  It will now be run continuously and keep referencing the &lt;code&gt;keyPressed&lt;/code&gt; object for an updated look at which keys the user is pressing and then appropriately telling our little yellow triangle where to go.&lt;/p&gt;</content:encoded></item><item><title>Setting Up Sublime Linter in Sublime Text 3</title><description>&lt;p&gt;Syntax errors suck.  They're pretty much like the worst.  We've all been there.  You have a moment of transcendental inspiration, you hack out some of the most erudite, lucid code you've ever created, hit save, and wait for the fruits of your flawless genius to unfold.  But then everything comes&lt;/p&gt;</description><link>http://localhost:2368/setting-up-sublime-linter-in-sublime-text-3/</link><guid isPermaLink="false">42911685-2cd7-4bc9-bc52-06e8bd4289cc</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Thu, 15 Oct 2015 17:09:18 GMT</pubDate><content:encoded>&lt;p&gt;Syntax errors suck.  They're pretty much like the worst.  We've all been there.  You have a moment of transcendental inspiration, you hack out some of the most erudite, lucid code you've ever created, hit save, and wait for the fruits of your flawless genius to unfold.  But then everything comes crashing down around you like a flaming house of cards hitting a fan, or something roughly equivalent.  The culprit?  Some misplaced comma on line 238 that takes you an hour and half to find.&lt;/p&gt;
 
@@ -311,8 +311,7 @@ All this code is well and good, but it needs a final line of d3 magic to work.  
 
 &lt;p&gt;As with all things code, it is much easier to explain in an example.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;
-var homer = {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var homer = {  
     name: 'Homer',
     catchPhrase : 'D\'Oh!',
     activity : function(){
@@ -320,12 +319,12 @@ var homer = {
     }
 };
 
-var barney = {
+var barney = {  
     name: 'Barney',
     catchPhrase : 'Buuuuurp!'
 };
 
-var speak = function(greeting1, greeting2){
+var speak = function(greeting1, greeting2){  
     greeting = greeting1 + greeting2 || '';
     console.log(greeting + this.catchPhrase);
 };
@@ -333,7 +332,8 @@ var speak = function(greeting1, greeting2){
 
 &lt;p&gt;As you can see, Homer and Barney are gregarious guys.  They need to be able to speak!  But, oh no!  &lt;code&gt;speak()&lt;/code&gt; is not a native function to either of them!  &lt;code&gt;this.catchphrase&lt;/code&gt; is doomed to be &lt;code&gt;undefined!&lt;/code&gt;&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;speak() ==&gt; undefined&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-javascript"&gt;speak() ==&amp;gt; undefined  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;strong&gt;.call()&lt;/strong&gt; &lt;br&gt;
 &lt;code&gt;.call(context, arg1, arg2...)&lt;/code&gt; &lt;br&gt;
@@ -341,12 +341,12 @@ The first argument that &lt;code&gt;.call()&lt;/code&gt; accepts will be what is
 
 &lt;p&gt;Here, &lt;code&gt;homer&lt;/code&gt; is passed as the first argument to &lt;code&gt;.call()&lt;/code&gt; and so &lt;code&gt;homer&lt;/code&gt; becomes bound as &lt;code&gt;this&lt;/code&gt; within the &lt;code&gt;speak()&lt;/code&gt; function.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;speak.call(homer) ==&gt; "D'Oh!"
+&lt;pre&gt;&lt;code class="language-javascript"&gt;speak.call(homer) ==&amp;gt; "D'Oh!"  
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Subsequent arguments can be passed into &lt;code&gt;.call()&lt;/code&gt; and they will be passed to the calling function.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;speak.call(homer, 'Hi, Marge! ', ' Hi, Barney! ') ==&gt; "Hi, Marge! Hi, Barney! D'Oh!"
+&lt;pre&gt;&lt;code class="language-javascript"&gt;speak.call(homer, 'Hi, Marge! ', ' Hi, Barney! ') ==&amp;gt; "Hi, Marge! Hi, Barney! D'Oh!"  
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;strong&gt;.apply()&lt;/strong&gt; &lt;br&gt;
@@ -361,7 +361,7 @@ The first argument that &lt;code&gt;.call()&lt;/code&gt; accepts will be what is
 
 &lt;p&gt;Homer loves drinking beer.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;var homer = {
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var homer = {  
     name: 'Homer',
     catchPhrase : 'D\'Oh!',
     drinkBeer : function(){
@@ -369,12 +369,13 @@ The first argument that &lt;code&gt;.call()&lt;/code&gt; accepts will be what is
     }
 };
 
-homer.drinkBeer(); ===&gt; "Mmmm Homer likes Duff!"&lt;/code&gt;&lt;/pre&gt;
+homer.drinkBeer(); ===&amp;gt; "Mmmm Homer likes Duff!"  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;But Barney loves drinking beer, too!  But he doesn't have a &lt;code&gt;.drinkBeer()&lt;/code&gt; method. How can Homer share his favorite activity?&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;
-homer.drinkBeer.call(barney); ===&gt; "Mmmm Barney likes Duff!"&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-javascript"&gt;homer.drinkBeer.call(barney); ===&amp;gt; "Mmmm Barney likes Duff!"  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;The same function is called, &lt;code&gt;homer.drinkBeer()&lt;/code&gt;, but by using &lt;code&gt;.call()&lt;/code&gt; we can change the context to bind &lt;code&gt;this&lt;/code&gt; to &lt;code&gt;barney&lt;/code&gt; instead.&lt;/p&gt;
 
@@ -384,16 +385,17 @@ homer.drinkBeer.call(barney); ===&gt; "Mmmm Barney likes Duff!"&lt;/code&gt;&lt;
 
 &lt;p&gt;When Homer and Barney are at Moe's Tavern, they rarely stop at one.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;var getDrunk = function(cb){
-    for(var i = 0; i &lt; 6; i++){
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var getDrunk = function(cb){  
+    for(var i = 0; i &amp;lt; 6; i++){
         cb();
     }
-};&lt;/code&gt;&lt;/pre&gt;
+};
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;code&gt;.getDrunk()&lt;/code&gt; accepts a callback and runs it six times.  Sounds like a good way to &lt;code&gt;.drinkBeer()&lt;/code&gt;!&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;getDrunk(homer.drinkBeer); ===&gt; "Mmmm Homer likes Duff!"...x6
-getDrunk(homer.drinkBeer.call(barney)); ===&gt; undefined...x6
+&lt;pre&gt;&lt;code class="language-javascript"&gt;getDrunk(homer.drinkBeer); ===&amp;gt; "Mmmm Homer likes Duff!"...x6  
+getDrunk(homer.drinkBeer.call(barney)); ===&amp;gt; undefined...x6  
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;code&gt;.call()&lt;/code&gt; and &lt;code&gt;.apply()&lt;/code&gt; invoked the function when they are called and don't return anything so they cannot be used when a function reference is required.&lt;/p&gt;
@@ -403,23 +405,23 @@ getDrunk(homer.drinkBeer.call(barney)); ===&gt; undefined...x6
 &lt;p&gt;Huh... &lt;br&gt;
 &lt;code&gt;fn.bind(context, arg1, arg2....)&lt;/code&gt; will return the following function.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;function(){
+&lt;pre&gt;&lt;code class="language-javascript"&gt;function(){  
   return fn.call(context, arg1, arg2....);
-};&lt;/code&gt;&lt;/pre&gt;
+};
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;So Barney can get cranked at Moe's too!  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;getDrunk(homer.drinkBeer.bind(barney); ===&gt; "Mmmm Barney likes Duff!"...x6
+&lt;pre&gt;&lt;code class="language-javascript"&gt;getDrunk(homer.drinkBeer.bind(barney); ===&amp;gt; "Mmmm Barney likes Duff!"...x6  
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;code&gt;.bind()&lt;/code&gt; acts as a closure, so it will create a new function and return a reference to it.  If you need to use that bound function multiple times, you can save it as a variable with all the properly bound &lt;code&gt;this&lt;/code&gt; goodness you could want.  &lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;
-var drinkBeerBarney = homer.drinkBeer.bind(barney);
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var drinkBeerBarney = homer.drinkBeer.bind(barney);
 
-typeof drinkBeerBarney ===&gt; 'function'
+typeof drinkBeerBarney ===&amp;gt; 'function'
 
-getDrunk(drinkBeerBarney); ===&gt; "Mmmm Barney likes Duff!"...x6
+getDrunk(drinkBeerBarney); ===&amp;gt; "Mmmm Barney likes Duff!"...x6  
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;So hopefully that will move you on your way toward some JS function binding context-fu mastery.  At least it should give you a hankering for a beer, so my job is done.&lt;/p&gt;</content:encoded></item><item><title>Setting Tab/Space Standards in Sublime Text</title><description>&lt;p&gt;An analogy for you; Properly indented code is to mixed spaces and tabs as  Oxford's English Dictionary is to a horde of tasmanian devils in a swimming pool full of scrabble letters.  &lt;/p&gt;
