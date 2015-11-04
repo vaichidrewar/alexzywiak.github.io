@@ -1,12 +1,256 @@
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
 
-If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sun, 25 Oct 2015 03:24:40 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Audio Visualiser Using D3</title><description>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 04 Nov 2015 04:14:00 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Growing a Trie in JS for Some Slick Word Searches</title><description>&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/Trie"&gt;trie&lt;/a&gt; is nifty little data structure that can be used to very quickly and efficiently check for the spelling of a word.  &lt;/p&gt;
 
-&lt;p&gt;Check out the full code &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;A little mind exercise:  Imagine you're playing a very high stakes game of Scrabble against Grandma and Aunt Helen and you just can't bear to be beaten&lt;/p&gt;</description><link>http://localhost:2368/growing-a-trie-in-js-for-some-slick-word-searches/</link><guid isPermaLink="false">3cfff344-8396-4b85-b5fb-44fe24621a59</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 04 Nov 2015 04:13:49 GMT</pubDate><content:encoded>&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/Trie"&gt;trie&lt;/a&gt; is nifty little data structure that can be used to very quickly and efficiently check for the spelling of a word.  &lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;Set&lt;/strong&gt;&lt;/p&gt;</description><link>http://localhost:2368/audio-visualiser-using-d3/</link><guid isPermaLink="false">a9984624-d736-432f-8dc4-d0d584f213c1</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 24 Oct 2015 21:43:46 GMT</pubDate><content:encoded>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+&lt;p&gt;A little mind exercise:  Imagine you're playing a very high stakes game of Scrabble against Grandma and Aunt Helen and you just can't bear to be beaten again.  So, you do what any other good Dev would do, and write a computer program to do the heavy lifting for you.  &lt;/p&gt;
 
-&lt;p&gt;Check out the full code &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Assuming you have all the permutations of the letters passed into your program, how would you check which ones were valid super high scoring words?  Comparing each against a list of dictionary words would be prohibitively slow and Aunt Helen would quickly become suspicious.&lt;/p&gt;
+
+&lt;p&gt;That's where the &lt;code&gt;trie&lt;/code&gt; structure comes in.  A trie is composed of linked nodes which each hold a value, in this case a letter, and links to &lt;em&gt;any subsequent letters that would continue to from a valid word&lt;/em&gt;. In this case, the nodes will also hold a property letting us know if that node represents the end of a valid word, so we know when to stop looking. &lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Essence of a Trie&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For example, the word &lt;strong&gt;tea&lt;/strong&gt; (a paltry 3 points, I know) would be composed of four nodes.  The root node up at the top is the point of all departure.  It hold references to all the possible &lt;em&gt;first&lt;/em&gt; letters of any words (in the diagrams case, t, A and i).  To check if the word &lt;strong&gt;tea&lt;/strong&gt; exists in the list, we would first look at the root node for a reference to any &lt;strong&gt;t&lt;/strong&gt; child nodes.  In this case there is one, so we check the &lt;strong&gt;t&lt;/strong&gt; node for a reference to &lt;strong&gt;e&lt;/strong&gt;, the second letter in our word.  That exists, as does a subsequent reference to &lt;strong&gt;a&lt;/strong&gt;.  Once we reach the last letter in our word, we will have to check to see if the final node corresponds to an entire word.  If it does, we know we have a match!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="http://localhost:2368/content/images/2015/10/trie.png" alt="Trie diagram courtesy of Wikipedia"&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Show Me the Code, Bro&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;OK, that's some lovely CS101 fluffiness, but how do we do something with it.  JS can nicely model a Trie structure using Objects.&lt;/p&gt;
+
+&lt;p&gt;The basic object will have a letter property, corresponding to the &lt;code&gt;letter&lt;/code&gt; that node represents, and an &lt;code&gt;isWord&lt;/code&gt; property which will be set to &lt;code&gt;true&lt;/code&gt; if that node represents the end of a complete word.  Letter also defaults to and empty string to represent the root node in the Trie.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javasript"&gt;var Trie = function(letter) {  
+  this.letter = letter || '';
+  this.isWord = false;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Where it really gets good is inserting new words into our Trie structure.  To do that we'll add an insert method to the &lt;code&gt;Trie.prototype&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// Adds a new word into the prefix tree
+Trie.prototype.insert = function(word) {  
+  var currentNode = this;
+  var newNode;
+  var ch;
+  // Loop through all the letters of the word to be inserted.
+  for (var i = 0; i &amp;lt; word.length; i++) {
+    ch = word.charAt(i);
+    // Check if the current node already has a property corresponding to the next letter
+    if (currentNode[ch]) {
+      // If it does have that letter already
+      // Move current node on to the next child node corresponding to next letter
+      currentNode = currentNode[ch];
+      // If Next letter node DOESN'T exists
+    } else {
+      // create a new child node for the next letter
+      // move current node on to the new node
+      newNode = new Trie(ch);
+      currentNode[ch] = newNode;
+      currentNode = newNode;
+    }
+    // When the last letter is reached, set the current node's 
+    // isWord property to true to represent the end of a complete
+    // word.
+    if (i === word.length - 1) {
+      currentNode.isWord = true;
+    }
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This method will take in a &lt;code&gt;word&lt;/code&gt; parameter and will insert it into our Trie.  To do that, it will loop over each letter in the new word, represented as &lt;code&gt;ch&lt;/code&gt;, moving down the trie as it goes.  To model the connections, we simply use properties on the &lt;code&gt;Trie&lt;/code&gt; object with the letter as the key name and the next node as the value.  &lt;/p&gt;
+
+&lt;p&gt;Using the diagram above as an example, that root node would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;{ 
+  t: Trie,
+  A: Trie,
+  i: Trie,
+  isWord: false,
+  letter: ''
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Starting at the root node as the first value for &lt;code&gt;currentNode&lt;/code&gt;, it will check if there is a property corresponding to the first letter in the word.  If that property already exists, we'll set it as &lt;code&gt;currentNode&lt;/code&gt; and move on to the next letter.  If it doesn't exist, we'll create a new &lt;code&gt;Trie&lt;/code&gt; object with its letter property set to &lt;code&gt;ch&lt;/code&gt;, set it as &lt;code&gt;currentNode&lt;/code&gt; and move on to the next letter.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;    if (currentNode[ch]) {
+      // If it does have that letter already
+      // Move current node on to the next child node corresponding to next letter
+      currentNode = currentNode[ch];
+      // If Next letter node DOESN'T exists
+    } else {
+      // create a new child node for the next letter
+      // move current node on to the new node
+      newNode = new Trie(ch);
+      currentNode[ch] = newNode;
+      currentNode = newNode;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we'll add a check to set the &lt;code&gt;isWord&lt;/code&gt; property to &lt;code&gt;true&lt;/code&gt; when we've reached the last letter.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// When the last letter is reached, set the current node's 
+    // isWord property to true to represent the end of a complete
+    // word.
+    if (i === word.length - 1) {
+      currentNode.isWord = true;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make use of the insert function, we'll create a new instance of a &lt;code&gt;Trie&lt;/code&gt;, which will represent our root node, and then we can drop in words to our heart's content.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var trie = new Trie();  
+trie.insert('crepuscular');  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;insert&lt;/code&gt; method will allow us to build out a structure similar to the diagram above.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;What Goes in Must Come Out&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Great, we can add words, but how do we know what's in there?&lt;/p&gt;
+
+&lt;p&gt;To search through the existing words, we'll need another method.  We'll create a &lt;code&gt;contains&lt;/code&gt; method which will take a string as an argument.  It will search through the trie and return a boolean value representing if the string is a word in the trie or not.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;Trie.prototype.contains = function(str) {  
+  var currentNode = this;
+  var ch;
+
+  // Loop through each letter in the string
+  for (var i = 0; i &amp;lt; str.length; i++) {
+    ch = str.charAt(i);
+    // Check if the current node has a link to that letter
+    if (!currentNode[ch]) {
+      // If it doesn't, str isn't a valid word so return false
+      return false;
+    } else {
+      // If it is a valid letter, move on to the next node.
+      currentNode = currentNode[ch];
+    }
+    // If we reach the end of the string and the current node
+    // represents a complete word, return true.
+    if (i === str.length - 1 &amp;amp;&amp;amp; currentNode.isWord) {
+      return true;
+    }
+  }
+  // If we reach the end of the string, but it's not a complete
+  // word, return false.
+  return false;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can check if our trie structure contains a given word.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var trie = new Trie();  
+trie.insert('crepuscular');  
+trie.insert('hirsute');  
+trie.insert('cheese');
+
+trie.contains('cheese') // ---&amp;gt; true  
+trie.contains('chee'); // ---&amp;gt; false  
+trie.contains('askldf'); // ---&amp;gt; really false  
+trie.contains('tubular'); // ---&amp;gt; false because we didn't add it yet  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;What Next&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;So we have trie, but we're not that much closer to having something that can help us school Grandma in Scrabble.  The trie is a necessary step though.  In order to find all possible scrabble words, we have to test all permutations of seven letters.  That's a lot of look ups! Although a trie needs a considerable amount of time to preprocess all the words in the dictionary, when that's complete we have the ability to check if a string is a valid word &lt;strong&gt;with constant time look up!&lt;/strong&gt;  Instead of looping through the entire dictionary to check each word, we only have to look at as many nodes as letters in the string.  &lt;/p&gt;
+
+&lt;p&gt;Next up, I'll go over an algorithm that will find and test all combinations of letters in a Scrabble hand.&lt;/p&gt;</content:encoded></item><item><title>Modelling Collision Detection in D3 with tween functions.</title><description>&lt;p&gt;Despite being named after a terribly awkward developmental stage, &lt;code&gt;tween&lt;/code&gt; functions can let you do some really cool stuff in d3.&lt;/p&gt;
+
+&lt;p&gt;The tween function is run on an element during a d3 transition.  It allows you to register a custom function that will be run at every increment between the&lt;/p&gt;</description><link>http://localhost:2368/modelling-collision-detection-in-d3/</link><guid isPermaLink="false">e66640a4-0304-4528-878f-81b962b6431c</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 31 Oct 2015 15:47:37 GMT</pubDate><content:encoded>&lt;p&gt;Despite being named after a terribly awkward developmental stage, &lt;code&gt;tween&lt;/code&gt; functions can let you do some really cool stuff in d3.&lt;/p&gt;
+
+&lt;p&gt;The tween function is run on an element during a d3 transition.  It allows you to register a custom function that will be run at every increment between the two poles of that transition and get reference to the precise attributes of the element each step of the way.  &lt;/p&gt;
+
+&lt;p&gt;I came across tween functions to model collision detection when I was trying to implement a rudimentary Asteroids clone.  For this example, I'll boil it down a little more, and use a custom tween function to determine when to randomly moving circles intersect each other.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up d3&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To get things going we're going to set up the &lt;code&gt;svg&lt;/code&gt; element and append it.  We'll also add some data for d3 to join for some sweet circles.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  var svg = d3.select('#container')
+    .append('svg')
+    .attr('height', 600)
+    .attr('width', 1000);
+
+  var data = ['blue', 'purple'];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up Animation&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Next up, we're going to set up a simple animation to have our circles bounce around between random points on the screen.  We'll chain the animations by calling &lt;code&gt;.each('end', move)&lt;/code&gt; to re-call the &lt;code&gt;move&lt;/code&gt; function when the original transition is completed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  var move = function() {
+    var circles = svg.selectAll('circle')
+      .data(data);
+
+    circles.enter()
+      .append('circle')
+
+    var circleAttrs = circles
+      .transition()
+      .duration(1000)
+      .attr('cx', function(d) {
+        return Math.floor(Math.random() * 1000);
+      })
+      .attr('cy', function(d) {
+        return Math.floor(Math.random() * 600);
+      })
+      .attr('r', 100)
+      .attr('fill', function(d) {
+        return d;
+      })
+      .tween('collision', collisionDetection)
+      .each('end', move);
+  };
+
+  move();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Enter Tween Function&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Notice right before the final call to &lt;code&gt;.each&lt;/code&gt;, we add our tween function.  The first argument is the name the tween function is registered for, and the second argument is a factory function that will return a function to be run on all the increments between the start and the end of the transition.&lt;/p&gt;
+
+&lt;p&gt;The factory function passed to &lt;code&gt;tween&lt;/code&gt; must &lt;strong&gt;return a function&lt;/strong&gt;.  It's also possible to take advantage of the closure nature of the factory function to preserve and reference any information from the start of the transition.&lt;/p&gt;
+
+&lt;p&gt;Our factory function, &lt;code&gt;collisionDetection&lt;/code&gt; will return a function that will grab all other present circles using &lt;code&gt;d3.select&lt;/code&gt;, and using some slick 8th grade Pythagorean algebra, determine the distance between our circle and any others.  If the calculated distance is less than the sum of their two radii, we'll consider them collided.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var collisionDetection = function() {  
+    return function() {
+      var thisCircle = d3.select(this);
+
+      d3.select('circle').each(function() {
+        var otherCircle = d3.select(this);
+
+        if (thisCircle.datum() !== otherCircle.datum()) {
+
+          dx = thisCircle.attr('cx') - otherCircle.attr('cx'),
+            dy = thisCircle.attr('cy') - otherCircle.attr('cy'),
+            distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+
+          if (distance &amp;lt; +thisCircle.attr('r') + +otherCircle.attr('r')) {
+            collision(thisCircle, otherCircle);
+          }
+        }
+      });
+    };
+  };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, on a collision it will call a collision function passing in the two offending circles.  Throw in a quick &lt;code&gt;console.log&lt;/code&gt; to see what's going on.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  var collision = function(thisCircle, otherCircle) {
+    console.log('Collision at: ' + thisCircle.attr('cx') + ',' + thisCircle.attr('cy'));
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;tween&lt;/code&gt; functions give you a lot of room to play around when using transitions in d3.  Check out the &lt;a href="https://github.com/mbostock/d3/wiki/Transitions#attrTween"&gt;documentation&lt;/a&gt; and make some sweet stuff.&lt;/p&gt;</content:encoded></item><item><title>Audio Visualiser Using D3</title><description>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+
+&lt;p&gt;Or, if you prefer, cut to the&lt;/p&gt;</description><link>http://localhost:2368/audio-visualiser-using-d3/</link><guid isPermaLink="false">a9984624-d736-432f-8dc4-d0d584f213c1</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 24 Oct 2015 21:43:46 GMT</pubDate><content:encoded>&lt;p&gt;D3 isn't just for squares with their pie charts and bar graphs anymore.  D3 can be totally Rock 'n Roll, man!  And to prove that to all you naysayers, we'll go ahead and build a sweet rockin' audio visualiser right in our browser.&lt;/p&gt;
+
+&lt;p&gt;Or, if you prefer, cut to the chase and check out the full code on Github &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set Up index.html&lt;/strong&gt;&lt;/p&gt;
 
@@ -349,11 +593,13 @@ The first argument that &lt;code&gt;.call()&lt;/code&gt; accepts will be what is
 &lt;pre&gt;&lt;code class="language-javascript"&gt;speak.call(homer, 'Hi, Marge! ', ' Hi, Barney! ') ==&amp;gt; "Hi, Marge! Hi, Barney! D'Oh!"  
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;strong&gt;.apply()&lt;/strong&gt; &lt;br&gt;
-&lt;code&gt;.apply(context, [arg list])&lt;/code&gt; &lt;br&gt;
+&lt;p&gt;&lt;strong&gt;.apply()&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;.apply(context, [arg list])&lt;/code&gt; &lt;br&gt;
 &lt;code&gt;.apply()&lt;/code&gt; works in almost the same way as &lt;code&gt;.call()&lt;/code&gt;.  The only difference between the two is the type of arguments they accept.  &lt;code&gt;.apply()&lt;/code&gt; will accept a single array or array-like object containing all of the arguments to be passed, whereas &lt;code&gt;.call()&lt;/code&gt; accepts a comma separated list.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;speak.apply(barney, ['Hi Moe! ', 'Hey Homer!']); ==&gt; "Hi Moe! Hey Homer! Buuuuurp!"&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-javascript"&gt;speak.apply(barney, ['Hi Moe! ', 'Hey Homer!']); ==&amp;gt; "Hi Moe! Hey Homer! Buuuuurp!"  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Notice how the values in the array object passed into &lt;code&gt;.apply()&lt;/code&gt; will be passed in order as the parameters to the calling function.&lt;/p&gt;
 

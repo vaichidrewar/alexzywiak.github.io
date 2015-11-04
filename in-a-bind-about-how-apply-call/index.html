@@ -11,9 +11,9 @@
 
     <link rel="shortcut icon" href="../favicon.ico">
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=655d311baf">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=da6e0c8d8c">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
-		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=655d311baf">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=da6e0c8d8c">
     <link rel="canonical" href="index.html">
     <meta name="referrer" content="origin">
     
@@ -23,7 +23,7 @@
     <meta property="og:description" content="You can really tell the True JS Ninjas from the Codeacademicians when it comes to proper use of .call(), .apply(), and .bind().   All three are methods available on the JS function prototype and are used to  reassign the value of...">
     <meta property="og:url" content="http://localhost:2368/in-a-bind-about-how-apply-call/">
     <meta property="article:published_time" content="2015-10-12T00:08:39.057Z">
-    <meta property="article:modified_time" content="2015-10-25T03:24:34.277Z">
+    <meta property="article:modified_time" content="2015-10-25T03:26:12.961Z">
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="In a .bind about how to .apply .call?">
@@ -45,7 +45,7 @@
     "headline": "In a .bind about how to .apply .call?",
     "url": "http://localhost:2368/in-a-bind-about-how-apply-call/",
     "datePublished": "2015-10-12T00:08:39.057Z",
-    "dateModified": "2015-10-25T03:24:34.277Z",
+    "dateModified": "2015-10-25T03:26:12.961Z",
     "description": "You can really tell the True JS Ninjas from the Codeacademicians when it comes to proper use of .call(), .apply(), and .bind().   All three are methods available on the JS function prototype and are used to  reassign the value of..."
 }
     </script>
@@ -137,11 +137,13 @@ The first argument that <code>.call()</code> accepts will be what is bound to th
 <pre><code class="language-javascript">speak.call(homer, 'Hi, Marge! ', ' Hi, Barney! ') ==&gt; "Hi, Marge! Hi, Barney! D'Oh!"  
 </code></pre>
 
-<p><strong>.apply()</strong> <br>
-<code>.apply(context, [arg list])</code> <br>
+<p><strong>.apply()</strong></p>
+
+<p><code>.apply(context, [arg list])</code> <br>
 <code>.apply()</code> works in almost the same way as <code>.call()</code>.  The only difference between the two is the type of arguments they accept.  <code>.apply()</code> will accept a single array or array-like object containing all of the arguments to be passed, whereas <code>.call()</code> accepts a comma separated list.</p>
 
-<pre><code>speak.apply(barney, ['Hi Moe! ', 'Hey Homer!']); ==&gt; "Hi Moe! Hey Homer! Buuuuurp!"</code></pre>
+<pre><code class="language-javascript">speak.apply(barney, ['Hi Moe! ', 'Hey Homer!']); ==&gt; "Hi Moe! Hey Homer! Buuuuurp!"  
+</code></pre>
 
 <p>Notice how the values in the array object passed into <code>.apply()</code> will be passed in order as the parameters to the calling function.</p>
 
@@ -275,8 +277,8 @@ getDrunk(drinkBeerBarney); ===&gt; "Mmmm Barney likes Duff!"...x6
     
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=655d311baf"></script>
-    <script type="text/javascript" src="../assets/js/index.js?v=655d311baf"></script>
-    <script type="text/javascript" src="../assets/js/prism.js?v=655d311baf"></script> 
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=da6e0c8d8c"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=da6e0c8d8c"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=da6e0c8d8c"></script> 
 
 </body>
