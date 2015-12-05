@@ -1,6 +1,115 @@
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
 
-If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sat, 05 Dec 2015 22:14:46 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Setting up a Wikipedia Factory in Angular</title><description>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to&lt;/p&gt;</description><link>http://localhost:2368/setting-up-a-wikipedia-factory-in-angular/</link><guid isPermaLink="false">f64974eb-adea-4e73-adba-c4ba56659240</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sun, 15 Nov 2015 00:53:41 GMT</pubDate><content:encoded>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to set up a basic factory in Angular to run some queries to Wikipedia that will grab an image and the article extract for a set of titles.&lt;/p&gt;
+If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sat, 05 Dec 2015 22:29:50 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Creating a MySpace Style Full Screen Search Using Angular Directives</title><description>&lt;p&gt;MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds like the perfect place for some directives!&lt;/p&gt;
+
+&lt;p&gt;To create this&lt;/p&gt;</description><link>http://localhost:2368/creating-a-myspace-style-full-screen-search-using-angular-directives/</link><guid isPermaLink="false">822e46f0-d6ad-4cba-82c7-aa01e12153fb</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 05 Dec 2015 22:29:39 GMT</pubDate><content:encoded>&lt;p&gt;MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds like the perfect place for some directives!&lt;/p&gt;
+
+&lt;p&gt;To create this feature, we're going to create two directives.  &lt;/p&gt;
+
+&lt;p&gt;The first, &lt;code&gt;keyPressEvents&lt;/code&gt; will be work as a listener that will subscribe to all keypress events on the document and will use &lt;code&gt;$rootScope&lt;/code&gt; to broadcast those events to any other directives that care to listen.&lt;/p&gt;
+
+&lt;p&gt;The second, &lt;code&gt;search&lt;/code&gt;, will subscribe to the $rootScope keypress events and will pull up a search interface.  It will also listen for specific keys, &lt;code&gt;enter&lt;/code&gt; and &lt;code&gt;esc&lt;/code&gt; to perform a search and to exit respectively.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Capturing Keypress Events&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Our first directive will be a general purpose event listener that will listen for any keypress events on the document, and will then use &lt;code&gt;$rootScope&lt;/code&gt; to broadcast them throughout the application.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;angular.module('recipes.keypress', [])  
+  .directive('keypressEvents', [
+    '$document',
+    '$rootScope',
+    function($document, $rootScope) {
+      return {
+        restrict: 'A',
+        link: function() {
+          $document.bind('keydown', function(e) {
+            $rootScope.$broadcast('keypress', e);
+            $rootScope.$broadcast('keypress:' + e.which, e);
+          });
+        }
+      };
+    }
+  ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On each keypress, this directive will broadcast two events on &lt;code&gt;$rootScope&lt;/code&gt;.  The first is &lt;code&gt;keypress&lt;/code&gt; which will pass the keypress event as a parameter.  The second, &lt;code&gt;keypress:&amp;lt;pressed key&amp;gt;&lt;/code&gt;, allows us to easily listen for specific keys being pressed.&lt;/p&gt;
+
+&lt;p&gt;Attach the &lt;code&gt;keypressEvents&lt;/code&gt; as an attribute on the body element in your &lt;code&gt;index.html&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;body keypress-events&amp;gt;  
+  //Awesome Angular App
+&amp;lt;/body&amp;gt;  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Full Screen Search Directive&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;search&lt;/code&gt; directive is where most of the UI goodness will happen.  This directive will listen for the keypress events broadcast on &lt;code&gt;$rootScope&lt;/code&gt; the from &lt;code&gt;keypressEvents&lt;/code&gt; directive and will display a fullscreen search element capturing the user's query.  &lt;/p&gt;
+
+&lt;p&gt;It will listen for the &lt;code&gt;enter&lt;/code&gt; key to execute the search. It will use &lt;code&gt;$rootScope&lt;/code&gt; to broadcast the search event and pass the query string as a parameter to any listeners you want to set up to deal process the search.  &lt;/p&gt;
+
+&lt;p&gt;It will also listen for &lt;code&gt;esc&lt;/code&gt; to hide itself.  &lt;/p&gt;
+
+&lt;p&gt;In case you want to disable it, like you need to catch user input without the search popping up and ruining everything, we will create another &lt;code&gt;$rootScope&lt;/code&gt; variable, &lt;code&gt;search&lt;/code&gt; which by default is set to &lt;code&gt;true&lt;/code&gt;.  If keyboard input is required outside of the search, the search can be disabled by setting &lt;code&gt;$rootScope.search = false&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;angular.module('recipes.search', [])  
+  .directive('search', ['$rootScope', '$state', function($rootScope, $state) {
+    return {
+      restrict: 'E',
+      replace: true,
+      templateUrl: 'app/directives/search/search.html',
+      controller: 'SearchCtrl',
+      link: function(scope, el, attr) {
+
+        // Default search to true
+        $rootScope.search = true;
+        var searchbar = el.find('#searchtext');
+
+        // Subscribe to $rootScope events from keypressEvents directive
+        scope.$on('keypress', function(onEvent, keypressEvent) {
+          // Disable searching if $rootScope.search is set to false anywhere in the app
+          if ($rootScope.search) {
+
+            // On escape
+            if (keypressEvent.which === 27) {
+              searchbar.val('').blur();
+              el.fadeOut(200);
+              // On enter
+            } else if (keypressEvent.which === 13) {
+              // Broadcast the search event on enter, clear the search input, and fade the search screen
+              $rootScope.$broadcast('search', searchbar.val());
+              searchbar.val('').blur();
+              el.fadeOut(200);
+
+            } else {
+              if(!el.is(':visible')){
+// Add in the first key the user presses              searchbar.val(String.fromCharCode(keypressEvent.which));
+              }
+              // Show the search input
+              scope.key = String.fromCharCode(keypressEvent.which);
+              searchbar.focus();
+              el.fadeIn(200);
+            }
+          }
+        });
+      }
+    };
+  }]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this include a template html file.&lt;/p&gt;
+
+&lt;p&gt;```&lt;/p&gt;
+
+&lt;div id="search"&gt;  
+    &lt;form ng-model="searchCriteria" id="searchform"&gt;
+        &lt;label id="label" for="searchtext"&gt;search: &lt;/label&gt;
+        &lt;input id="searchtext" name="searchtext" type="text"&gt;
+    &lt;/form&gt;
+&lt;/div&gt;  
+
+&lt;p&gt;``&lt;/p&gt;
+
+&lt;p&gt;Add some styles to make it full screen, and you're good to go!&lt;/p&gt;</content:encoded></item><item><title>Setting up a Wikipedia Factory in Angular</title><description>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to&lt;/p&gt;</description><link>http://localhost:2368/setting-up-a-wikipedia-factory-in-angular/</link><guid isPermaLink="false">f64974eb-adea-4e73-adba-c4ba56659240</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sun, 15 Nov 2015 00:53:41 GMT</pubDate><content:encoded>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to set up a basic factory in Angular to run some queries to Wikipedia that will grab an image and the article extract for a set of titles.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set up Factory&lt;/strong&gt;&lt;/p&gt;
 
