@@ -1,6 +1,106 @@
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
 
-If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 04 Nov 2015 04:14:00 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Growing a Trie in JS for Some Slick Word Searches</title><description>&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/Trie"&gt;trie&lt;/a&gt; is nifty little data structure that can be used to very quickly and efficiently check for the spelling of a word.  &lt;/p&gt;
+If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sat, 05 Dec 2015 22:14:46 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Setting up a Wikipedia Factory in Angular</title><description>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to&lt;/p&gt;</description><link>http://localhost:2368/setting-up-a-wikipedia-factory-in-angular/</link><guid isPermaLink="false">f64974eb-adea-4e73-adba-c4ba56659240</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sun, 15 Nov 2015 00:53:41 GMT</pubDate><content:encoded>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to set up a basic factory in Angular to run some queries to Wikipedia that will grab an image and the article extract for a set of titles.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set up Factory&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;First, declare a factory onto an app module.  Our factory will expose one function to its subscribing controllers called &lt;code&gt;getWiki&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;angular.module('angularApp')  
+  .factory('wikiFactory', function($http){
+
+  var getWiki = function(title){};
+
+  return {
+    getWiki: getWiki
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Build our Query URL&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Next up we have to navigate the wilds of the Wiki API and create a url that will pull up our images and extract.  First, we add a variable defining the base Wiki API url. Then, we will define a helper function which will take an object and convert it into an appropriately parsed URL parameters string.  This will allow us to conveniently add in all our search parameters using object notation in our &lt;code&gt;getWiki&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;    var wikiUrl = "http://en.wikipedia.org/w/api.php?action=query&amp;amp;format=json&amp;amp;callback=JSON_CALLBACK";
+
+    var buildQuery = function(obj) {
+      var url = wikiUrl;
+      for (var key in obj) {
+        url += '&amp;amp;' + key + '=' + obj[key];
+      }
+      return url;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Run some $http&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Our &lt;code&gt;getWiki&lt;/code&gt; function will make use of the angular &lt;code&gt;$http&lt;/code&gt; module and promises to deal with all the async magic.  We will pass an object defining all of our search parameters, use the &lt;code&gt;buildQuery&lt;/code&gt; helper function to collate them into a searchable string, and then send off our request to Wikipedia.  &lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Note on CORS&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To avoid Cross Origin issues, we'll set our method to &lt;a href="https://en.wikipedia.org/wiki/JSONP"&gt;jsonp&lt;/a&gt; so that everyone plays nice together.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  var getWiki = function(titlesArray) {
+      var url = buildQuery({
+        titles: titlesArray.join('|'),
+        prop: "pageimages|extracts",
+        pithumbsize: 500,
+        redirects: true,
+        exintro: true,
+        explaintext: true,
+      });
+
+      return $http({
+        url: url,
+        method: 'jsonp'
+      }).then(function(results) {
+        return results.data;
+      });
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code will make a query for all titles contained in the passed in array.  It will grab an image of size 500, or closest, and the extract parsed into a string.  Redirects is set to &lt;code&gt;true&lt;/code&gt; so if the title leads to a redirect, the redirect article will be sent.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Tie it All Together&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;So toss that little factory in there and you're good to go querying Wikipedia to your app's heart's content!  Beware that the data that comes back is organized based on the Wiki page id, so you'll have to do a little digging to get at the good stuff.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;angular.module('angularApp')  
+  .factory('wikiFactory', function($http) {
+
+    var wikiUrl = "http://en.wikipedia.org/w/api.php?action=query&amp;amp;format=json&amp;amp;callback=JSON_CALLBACK";
+
+    var buildQuery = function(obj) {
+      var url = wikiUrl;
+      for (var key in obj) {
+        url += '&amp;amp;' + key + '=' + obj[key];
+      }
+      return url;
+    };
+
+    var getWiki = function(titles) {
+      var url = buildQuery({
+        titles: titles.join('|'),
+        prop: "pageimages|extracts",
+        pithumbsize: 500,
+        redirects: true,
+        exintro: true,
+        explaintext: true,
+      });
+
+      return $http({
+        url: url,
+        method: 'jsonp'
+      }).then(function(results) {
+        return results.data;
+      });
+    };
+
+    return {
+      getWiki: getWiki
+    }
+  });
+&lt;/code&gt;&lt;/pre&gt;</content:encoded></item><item><title>Growing a Trie in JS for Some Slick Word Searches</title><description>&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/Trie"&gt;trie&lt;/a&gt; is nifty little data structure that can be used to very quickly and efficiently check for the spelling of a word.  &lt;/p&gt;
 
 &lt;p&gt;A little mind exercise:  Imagine you're playing a very high stakes game of Scrabble against Grandma and Aunt Helen and you just can't bear to be beaten&lt;/p&gt;</description><link>http://localhost:2368/growing-a-trie-in-js-for-some-slick-word-searches/</link><guid isPermaLink="false">3cfff344-8396-4b85-b5fb-44fe24621a59</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 04 Nov 2015 04:13:49 GMT</pubDate><content:encoded>&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/Trie"&gt;trie&lt;/a&gt; is nifty little data structure that can be used to very quickly and efficiently check for the spelling of a word.  &lt;/p&gt;
 
