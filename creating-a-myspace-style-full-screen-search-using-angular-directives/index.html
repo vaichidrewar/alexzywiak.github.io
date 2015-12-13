@@ -1,3 +1,4 @@
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,19 +11,19 @@
 
     <link rel="shortcut icon" href="../favicon.ico">
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=f011d47e2b">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=b63a727d8e">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
-		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=f011d47e2b">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=b63a727d8e">
     <link rel="canonical" href="index.html">
     <meta name="referrer" content="origin">
     
-    <meta property="og:site_name" content="Lingua Franca v2.0">
+    <meta property="og:site_name" content="Lingua Franca">
     <meta property="og:type" content="article">
     <meta property="og:title" content="Creating a MySpace Style Full Screen Search Using Angular Directives">
     <meta property="og:description" content="MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds...">
     <meta property="og:url" content="http://localhost:2368/creating-a-myspace-style-full-screen-search-using-angular-directives/">
     <meta property="article:published_time" content="2015-12-05T22:29:39.917Z">
-    <meta property="article:modified_time" content="2015-12-05T22:29:39.878Z">
+    <meta property="article:modified_time" content="2015-12-10T01:48:52.055Z">
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Creating a MySpace Style Full Screen Search Using Angular Directives">
@@ -33,7 +34,7 @@
 {
     "@context": "http://schema.org",
     "@type": "Article",
-    "publisher": "Lingua Franca v2.0",
+    "publisher": "Lingua Franca",
     "author": {
         "@type": "Person",
         "name": "Alex Zywiak",
@@ -44,13 +45,13 @@
     "headline": "Creating a MySpace Style Full Screen Search Using Angular Directives",
     "url": "http://localhost:2368/creating-a-myspace-style-full-screen-search-using-angular-directives/",
     "datePublished": "2015-12-05T22:29:39.917Z",
-    "dateModified": "2015-12-05T22:29:39.878Z",
+    "dateModified": "2015-12-10T01:48:52.055Z",
     "description": "MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds..."
 }
     </script>
 
     <meta name="generator" content="Ghost 0.7">
-    <link rel="alternate" type="application/rss+xml" title="Lingua Franca v2.0" href="../rss/index.html">
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html">
 </head>
 <body class="post-template nav-closed">
 
@@ -164,6 +165,7 @@
               // On enter
             } else if (keypressEvent.which === 13) {
               // Broadcast the search event on enter, clear the search input, and fade the search screen
+
               $rootScope.$broadcast('search', searchbar.val());
               searchbar.val('').blur();
               el.fadeOut(200);
@@ -184,20 +186,26 @@
   }]);
 </code></pre>
 
+<p>The search bar doesn't actually do anything with the search other than broadcast it out into app-land, so to add some functionality you need to subscribe to it in any of your other directives or controllers.  To do so, make sure and inject the <code>$rootScope</code> dependency Then add in the following subscription.  </p>
+
+<pre><code class="language-javascript">$rootScope.$on('search', function(event, query){
+  // Process Search
+});
+</code></pre>
+
 <p>With this include a template html file.</p>
 
-<p>```</p>
+<pre><code>&lt;div id="search"&gt;  
+    &lt;form ng-model="searchCriteria" id="searchform"&gt;
+        &lt;label id="label" for="searchtext"&gt;search: &lt;/label&gt;
+        &lt;input id="searchtext" name="searchtext" type="text" /&gt;
+    &lt;/form&gt;
+&lt;/div&gt;  
+</code></pre>
 
-<div id="search">  
-    <form ng-model="searchCriteria" id="searchform">
-        <label id="label" for="searchtext">search: </label>
-        <input id="searchtext" name="searchtext" type="text">
-    </form>
-</div>  
+<p>You need to add some CSS, which I won't go into here, to make it full screen.</p>
 
-<p>``</p>
-
-<p>Add some styles to make it full screen, and you're good to go!</p>
+<p>Add in the <code>&lt;search&gt;&lt;/search&gt;</code> element on any page and you're good to go!</p>
         </section>
 
         <footer class="post-footer">
@@ -234,6 +242,12 @@
 </main>
 
 <aside class="read-next">
+    <a class="read-next-story no-cover" href="../getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/">
+        <section class="post">
+            <h2>Getting a Written Transcript for a Youtube Video Using IBM Watson</h2>
+            <p>I will go through a quick script that will download audio from a Youtube video and then send it…</p>
+        </section>
+    </a>
     <a class="read-next-story prev no-cover" href="../setting-up-a-wikipedia-factory-in-angular/">
         <section class="post">
             <h2>Setting up a Wikipedia Factory in Angular</h2>
@@ -245,7 +259,7 @@
 
 
         <footer class="site-footer clearfix">
-            <section class="copyright"><a href="../">Lingua Franca v2.0</a> © 2015</section>
+            <section class="copyright"><a href="../">Lingua Franca</a> © 2015</section>
             <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
         </footer>
 
@@ -254,8 +268,8 @@
     
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=f011d47e2b"></script>
-    <script type="text/javascript" src="../assets/js/index.js?v=f011d47e2b"></script>
-    <script type="text/javascript" src="../assets/js/prism.js?v=f011d47e2b"></script> 
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=b63a727d8e"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=b63a727d8e"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=b63a727d8e"></script> 
 
 </body>

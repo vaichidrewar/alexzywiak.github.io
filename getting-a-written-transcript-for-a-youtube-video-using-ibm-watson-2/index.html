@@ -1,0 +1,352 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Getting a Written Transcript for a Youtube Video Using IBM Watson</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=b63a727d8e">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=b63a727d8e">
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="origin">
+    
+    <meta property="og:site_name" content="Lingua Franca">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Getting a Written Transcript for a Youtube Video Using IBM Watson">
+    <meta property="og:description" content="I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript. If you're the impatient type, here's the...">
+    <meta property="og:url" content="http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/">
+    <meta property="article:published_time" content="2015-12-10T02:41:10.342Z">
+    <meta property="article:modified_time" content="2015-12-10T16:43:53.431Z">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Getting a Written Transcript for a Youtube Video Using IBM Watson">
+    <meta name="twitter:description" content="I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript. If you're the impatient type, here's the...">
+    <meta name="twitter:url" content="http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/">
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Getting a Written Transcript for a Youtube Video Using IBM Watson",
+    "url": "http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/",
+    "datePublished": "2015-12-10T02:41:10.342Z",
+    "dateModified": "2015-12-10T16:43:53.431Z",
+    "description": "I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript. If you&#x27;re the impatient type, here&#x27;s the..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7">
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html">
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Getting a Written Transcript for a Youtube Video Using IBM Watson</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2015-12-09">09 December 2015</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript.</p>
+
+<p>If you're the impatient type, here's the complete code. <br>
+<a href="https://github.com/alexzywiak/youtube-transcriber">youtube-transcriber</a></p>
+
+<p><strong>Set Up</strong></p>
+
+<p>To illustrate, I'm going to create three files.  <code>youtube.js</code> to handle downloading the audio file, <code>watson.js</code> to get the transcription from Watson, and <code>index.js</code> to tie them together.  There are a handful of modules we'll have to prepare, also.</p>
+
+<p>We're going to use <a href="https://rg3.github.io/youtube-dl/">youtube-dl</a> to handle getting the audio for us.  If you have <code>homebrew</code>, install <code>youtube-dl</code> by running:</p>
+
+<pre>brew install youtube-dl</pre>
+
+<p>We will have to do some audio processing as well.  <code>youtube-dl</code> can make use of <a href="https://www.ffmpeg.org/">ffmpeg</a> to do all its auditory dirty work, so go ahead and install that, too.</p>
+
+<pre>brew install ffmpeg</pre>
+
+<p>While we're on the module train, let's prep all the necessary npm packages.</p>
+
+<pre>npm install bluebird watson-developer-cloud fluent-ffmpeg</pre>
+
+<p><strong>Downloading Audio from Youtube</strong></p>
+
+<p>To download the audio, we will spawn a node child process to run <code>youtube-dl</code>.The spawn process does all the work for us.  We pass the URL of the video we want, specify only to grab the audio, set the output to mp3, and set the file name.  I have the file named simply as <code>file.mp3</code>, but it can be changed to whatever you need.  Check the <a href="https://rg3.github.io/youtube-dl/">youtube-dl</a> docs for more details.</p>
+
+<pre><code class="language-javascript">// youtube.js
+var spawn = require('child_process').spawn;  
+var Promise = require('bluebird');  
+var ffmpeg = require('fluent-ffmpeg');  
+var path = require('path');
+
+exports.getYouTubeAudio = function(videoId){  
+    return new Promise(function(resolve, reject){
+      // Install youtube_dl locally: brew install youtube-dl
+    youtube_dl = spawn('youtube-dl', ['--extract-audio', '--audio-format', 'mp3', '-o', 'file.%(ext)s', "http://www.youtube.com/watch?v=" + videoId]);
+
+    youtube_dl.stdout.on('data', function(data){
+      console.log(data.toString());
+    });
+
+    youtube_dl.stderr.on('data', function(data){
+      process.stderr.write(data);
+    });
+
+    // brew install ffmpeg
+    youtube_dl.on('exit', function(){
+      var mp3File = path.join(__dirname, 'file.mp3');
+      var flacFile = path.join(__dirname, 'file.flac')
+      ffmpeg(mp3File)
+        .output(flacFile)
+        .on('end', function(){
+          resolve();
+        })
+        .on('error', function(err){
+          reject(err);
+        })
+        .run();
+    });
+  });
+};
+</code></pre>
+
+<p>Of course, Watson takes <code>flac</code> files, so we'll have to convert our <code>mp3</code>.  We can use the <code>fluent-ffmpeg</code> module to take care of this for us.</p>
+
+<pre><code class="language-javascript">    //youtube.js
+    var ffmpeg = require('fluent-ffmpeg);
+...
+    youtube_dl.on('exit', function(){
+      var mp3File = path.join(__dirname, 'file.mp3');
+      var flacFile = path.join(__dirname, 'file.flac')
+      ffmpeg(mp3File)
+        .output(flacFile)
+        .on('end', function(){
+          resolve();
+        })
+        .on('error', function(err){
+          reject(err);
+        })
+        .run();
+    });
+</code></pre>
+
+<p>I've also used Bluebird as a promise library to resolve once the <code>ffmpeg</code> conversion is complete, so that we can easily chain the download with our next script.</p>
+
+<p><strong>Getting a Transcript from Watson</strong></p>
+
+<p>In order to use Watson, you need to head on over to IBM <a href="http://www.ibm.com/cloud-computing/bluemix/?cm_mmc=search-gsn-_-branded-Bluemix-general-_-bmm%20%2Bblue%20%2Bmix%20blue%20mix-_-usa-bm-mkt-oww">Bluemix</a> and sign up to get some creds. </p>
+
+<p>To use Watson in Node, the good folks at IBM were kind enough to create an <a href="https://www.npmjs.com/package/watson-developer-cloud#speech-to-text">npm module</a> for us.  So to get connected, include this code.</p>
+
+<pre><code class="language-javascript">// watson.js
+var watson = require('watson-developer-cloud');
+
+var speech_to_text = watson.speech_to_text({  
+  username: &lt;bluemix username&gt;,
+  password: &lt;bluemix password&gt;,
+  version: 'v1',
+  url: 'https://stream.watsonplatform.net/speech-to-text/api',
+});
+</code></pre>
+
+<p>There are a few ways to send and get the transcript from Watson.  I went for streaming as you can send larger files.  As the response is streamed back, we're going to build out a json object and then write it to a file when the transcription stream is done.</p>
+
+<p>This function will take in the path to the audio file we want to transcribe, <code>file.flac</code> for our example, and will write the transcript to <code>transcript.json</code>.  The <code>params</code> option allows you to specify additional information you want Watson to include.  Here, I asked for timestamps for each word as well as to ignore silence by setting <code>continue</code> to <code>true</code>.  If you only want the written transcript, you can stream the output directly into a <code>writeStream</code> to a text file.  I opted for JSON because I wanted to get at the timestamp objects.</p>
+
+<pre><code class="language-javascript ">// watson.js
+var watson = require('watson-developer-cloud');  
+var fs = require('fs');  
+var path = require('path');  
+var Promise = require('bluebird');
+
+var speech_to_text = watson.speech_to_text({  
+  username: '505575e5-324c-45f6-b22e-751a23d6680d',
+  password: 'UfEnWMLWZCuz',
+  version: 'v1',
+  url: 'https://stream.watsonplatform.net/speech-to-text/api',
+});
+
+exports.watsonSpeechToText = function(audioFile) {
+
+  return new Promise(function(resolve, reject) {
+
+    var params = {
+      content_type: 'audio/flac',
+      timestamps: true,
+      continuous: true
+    };
+
+    var results = [];
+
+    // create the stream
+    var recognizeStream = speech_to_text.createRecognizeStream(params);
+
+    // pipe in some audio
+    fs.createReadStream(audioFile).pipe(recognizeStream);
+
+    // listen for 'data' events for just the final text
+    // listen for 'results' events to get the raw JSON with interim results, timings, etc.
+
+    recognizeStream.setEncoding('utf8'); // to get strings instead of Buffers from `data` events
+
+    recognizeStream.on('results', function(e) {
+      if (e.results[0].final) {
+        results.push(e);
+      }
+    });
+
+    ['data', 'results', 'error', 'connection-close'].forEach(function(eventName) {
+      recognizeStream.on(eventName, console.log.bind(console, eventName + ' event: '));
+    });
+
+    recognizeStream.on('error', function(err) {
+      util.handleError('Error writing to transcript.json: ' + err);
+    });
+
+    recognizeStream.on('connection-close', function() {
+        var transcriptFile = path.join(__dirname, 'transcript.json');
+
+      fs.writeFile(transcriptFile, JSON.stringify(results), function(err) {
+        if (err) {
+          util.handleError(err);
+        }
+        resolve();
+      });
+    });
+  });
+};
+</code></pre>
+
+<p>All you need to do is chain these functions together and you will have all the transcripted goodness you would want!</p>
+
+<p><strong>Running the Show</strong></p>
+
+<p><code>index.js</code> will combine our two modules and allow you to run them using the command line.  As it's set up here, run <code>node index.js transcribe &lt;some video id&gt;</code> and you're up and running!</p>
+
+<p>Give this one a try: <code>node index.js transcribe I9VA-U69yaY</code>  </p>
+
+<pre><code class="language-javascript">// index.js
+var watson = require('./watson');  
+var youtube = require('./youtube');  
+var path = require('path');
+
+var flags = process.argv.slice(2);
+
+if(flags[0] === 'transcribe'){  
+    youtube.getYouTubeAudio(flags[1])
+        .then(watson.watsonSpeechToText.bind(this, path.join(__dirname, 'file.flac')))
+        .then(function(){
+            console.log('Done transcribing video id: ' + flags[1]);
+        });
+}
+</code></pre>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Getting%20a%20Written%20Transcript%20for%20a%20Youtube%20Video%20Using%20IBM%20Watson&amp;url=http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story no-cover" href="../best-of-both-worlds-modelling-relational-data-with-mongoose/">
+        <section class="post">
+            <h2>Best of Both Worlds: Modelling Relational Data With Mongoose</h2>
+            <p>The relational debate rages on.  On the relational side of things, you have single sources of truth, all the…</p>
+        </section>
+    </a>
+    <a class="read-next-story prev no-cover" href="../creating-a-myspace-style-full-screen-search-using-angular-directives/">
+        <section class="post">
+            <h2>Creating a MySpace Style Full Screen Search Using Angular Directives</h2>
+            <p>MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Lingua Franca</a> © 2015</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=b63a727d8e"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=b63a727d8e"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=b63a727d8e"></script> 
+
+</body>

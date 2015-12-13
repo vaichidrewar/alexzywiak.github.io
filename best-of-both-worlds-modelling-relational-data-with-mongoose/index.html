@@ -1,0 +1,278 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Best of Both Worlds: Modelling Relational Data With Mongoose</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=b63a727d8e">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=b63a727d8e">
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="origin">
+    
+    <meta property="og:site_name" content="Lingua Franca">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Best of Both Worlds: Modelling Relational Data With Mongoose">
+    <meta property="og:description" content="The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around...">
+    <meta property="og:url" content="http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/">
+    <meta property="article:published_time" content="2015-12-12T22:13:42.726Z">
+    <meta property="article:modified_time" content="2015-12-13T02:56:55.265Z">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Best of Both Worlds: Modelling Relational Data With Mongoose">
+    <meta name="twitter:description" content="The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around...">
+    <meta name="twitter:url" content="http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/">
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Best of Both Worlds: Modelling Relational Data With Mongoose",
+    "url": "http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/",
+    "datePublished": "2015-12-12T22:13:42.726Z",
+    "dateModified": "2015-12-13T02:56:55.265Z",
+    "description": "The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7">
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html">
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Best of Both Worlds: Modelling Relational Data With Mongoose</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2015-12-12">12 December 2015</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is a dev to do?</p>
+
+<p>I was working on a project where we were modelling some highly related data using MongoDB, projects as parts of an organization, and we came up against the inevitable existential question, to embed or not to embed?</p>
+
+<p>Embedding documents keeps everything in one place and makes all relevant data easily accessible with a single query.</p>
+
+<pre><code class="language-javascript">//Organizations - Embedded
+{
+  name: 'Organization',
+  projects: [{name: 'project1'}, {name:'project2'}]
+}
+</code></pre>
+
+<p>Creating separate collections means we have only one source of truth to make updates on and we can easily access any piece of the hierarchy.</p>
+
+<pre><code class="language-javascript">//Organizations - Separate Collections
+{
+  name: 'Organization',
+  projects: [project1._id, project2._id]
+}
+// Projects collection
+{
+  name: 'Project1'
+}
+{
+  name: 'Project2'
+}
+</code></pre>
+
+<p>We ended up choosing to separate out the collections.  There was too much overlap between different documents; if you updated one sub document, you had to make sure it was updated everywhere.  And it proved very difficult to make complex queries and operations on sub documents.  That being said, how can you conveniently link related documents together in MongoDB?</p>
+
+<p>The solution I ended up using was to create separate collections using Mongoose <a href="http://mongoosejs.com/docs/2.7.x/docs/populate.html">DB-refs</a> to link related documents on different collections, and then creating a middleware function to auto-populate the documents with their db-refs on any query.</p>
+
+<p><strong>DB-refs</strong></p>
+
+<p>DB-refs essentially save a reference to an _id property for one or many other documents that are related to the current document.  From the Mongoose docs:</p>
+
+<pre><code class="language-javascript">var StorySchema = new Schema({  
+    _creator : { type: Schema.ObjectId, ref: 'Person' }
+  , title    : String
+  , fans     : [{ type: Schema.ObjectId, ref: 'Person' }]
+});
+</code></pre>
+
+<p>The story schema can be linked to a single _creator document and any number of fan documents.  These references will be saved in the <code>_creator</code> and <code>fans</code> properties respectively.  To set up these connections, you only need to save the corresponding _id value in _creator.</p>
+
+<pre><code class="language-javascript">var aaron = new Person({ name: 'Aaron', age: 100 });
+
+aaron.save(function (err) {  
+  if (err) ...
+
+  var story1 = new Story({
+      title: "A man who cooked Nintendo"
+    , _creator: aaron._id
+  });
+
+  story1.save(function (err) {
+    if (err) ...
+  });
+})
+</code></pre>
+
+<p>Now the story document has a reference to 'aaron', its creator.  To get access to this document, you can 'populate' it to fill in all the DB-ref fields with the documents that they actually reference.</p>
+
+<pre><code class="language-javascript">Story  
+.findOne({ title: /Nintendo/i })
+.populate('_creator', ['name']) // &lt;-- only return the Persons name
+.exec(function (err, story) {
+  if (err) ..
+
+  console.log('The creator is %s', story._creator.name);
+  // prints "The creator is Aaron"
+
+  console.log('The creators age is %s', story._creator.age)
+  // prints "The creators age is null'
+})
+</code></pre>
+
+<p>Now this is all well and good, but you have to set up the query to populate.  And what if you have multiple fields you want to populate?  And what if you want to do it all the time?  It would be pain in the ass to have to include populate on every single query you write out, so we'll ship it off to Mongoose middleware to do it each time for us.</p>
+
+<p>Shifting gears away from the stories a little, in my recent project we had a users schema that held references to organizations, projects, and tasks all of which were separate collections in their own right.</p>
+
+<p>Here's what our user schema looked like:  </p>
+
+<pre><code class="language-javascript">var usersSchema = new Schema({  
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  organization: [{
+    type: Schema.ObjectId,
+    ref: 'Org'
+  }],
+  project_list: [{
+    type: Schema.ObjectId,
+    ref: 'Project'
+  }],
+  task_list: [{
+    type: Schema.ObjectId,
+    ref: 'Task'
+  }]
+});
+</code></pre>
+
+<p>It would be nice, no matter when you grabbed a user from the DB, it had all of those fields automatically populated, right?</p>
+
+<p>On defining the model, you can hook into the Mongoose middleware, specifically the 'init' hook which will get fired whenever an existing model is grabbed from the DB.  Inside of the users' model definition, I added in this hook.  It makes use of the Mongoose Model's populate method.  You can pass a space delimited string of all the fields you want to populate.  Any time a user model is picked up, it will have each of those DB-ref fields filled out.</p>
+
+<pre><code class="language-javascript">db.usersSchema.pre('init', function(next, data) {  
+  User.populate(data, {
+    path: 'organization project_list task_list'
+  }, function(err, user) {
+    data = user;
+    next();
+  });
+});
+</code></pre>
+
+<p>I found this solution to work quite nicely with what we were trying to achieve.  We maintained separate, highly related collections.  Each collection was easy to access and update, and there was only one source of truth for each entry.  We also got access to the convenience and intuitive structure of POJOs automatically built for us with every query!  A nice little solution that gave us the best of both worlds.</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Best%20of%20Both%20Worlds%3A%20Modelling%20Relational%20Data%20With%20Mongoose&amp;url=http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/">
+        <section class="post">
+            <h2>Getting a Written Transcript for a Youtube Video Using IBM Watson</h2>
+            <p>I will go through a quick script that will download audio from a Youtube video and then send it…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Lingua Franca</a> © 2015</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=b63a727d8e"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=b63a727d8e"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=b63a727d8e"></script> 
+
+</body>

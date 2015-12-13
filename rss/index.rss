@@ -1,6 +1,325 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca v2.0</title><description>JS and Web Engineering
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sun, 13 Dec 2015 02:57:27 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Best of Both Worlds: Modelling Relational Data With Mongoose</title><description>&lt;p&gt;The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is&lt;/p&gt;</description><link>http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/</link><guid isPermaLink="false">3ca79ea9-2298-4635-88e4-318d59778625</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 12 Dec 2015 22:13:42 GMT</pubDate><content:encoded>&lt;p&gt;The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is a dev to do?&lt;/p&gt;
 
-If the Printing Press started the Renaissance, what can Javascript do?</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sat, 05 Dec 2015 22:29:50 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Creating a MySpace Style Full Screen Search Using Angular Directives</title><description>&lt;p&gt;MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds like the perfect place for some directives!&lt;/p&gt;
+&lt;p&gt;I was working on a project where we were modelling some highly related data using MongoDB, projects as parts of an organization, and we came up against the inevitable existential question, to embed or not to embed?&lt;/p&gt;
+
+&lt;p&gt;Embedding documents keeps everything in one place and makes all relevant data easily accessible with a single query.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;//Organizations - Embedded
+{
+  name: 'Organization',
+  projects: [{name: 'project1'}, {name:'project2'}]
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Creating separate collections means we have only one source of truth to make updates on and we can easily access any piece of the hierarchy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;//Organizations - Separate Collections
+{
+  name: 'Organization',
+  projects: [project1._id, project2._id]
+}
+// Projects collection
+{
+  name: 'Project1'
+}
+{
+  name: 'Project2'
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We ended up choosing to separate out the collections.  There was too much overlap between different documents; if you updated one sub document, you had to make sure it was updated everywhere.  And it proved very difficult to make complex queries and operations on sub documents.  That being said, how can you conveniently link related documents together in MongoDB?&lt;/p&gt;
+
+&lt;p&gt;The solution I ended up using was to create separate collections using Mongoose &lt;a href="http://mongoosejs.com/docs/2.7.x/docs/populate.html"&gt;DB-refs&lt;/a&gt; to link related documents on different collections, and then creating a middleware function to auto-populate the documents with their db-refs on any query.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;DB-refs&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;DB-refs essentially save a reference to an _id property for one or many other documents that are related to the current document.  From the Mongoose docs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var StorySchema = new Schema({  
+    _creator : { type: Schema.ObjectId, ref: 'Person' }
+  , title    : String
+  , fans     : [{ type: Schema.ObjectId, ref: 'Person' }]
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The story schema can be linked to a single _creator document and any number of fan documents.  These references will be saved in the &lt;code&gt;_creator&lt;/code&gt; and &lt;code&gt;fans&lt;/code&gt; properties respectively.  To set up these connections, you only need to save the corresponding _id value in _creator.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var aaron = new Person({ name: 'Aaron', age: 100 });
+
+aaron.save(function (err) {  
+  if (err) ...
+
+  var story1 = new Story({
+      title: "A man who cooked Nintendo"
+    , _creator: aaron._id
+  });
+
+  story1.save(function (err) {
+    if (err) ...
+  });
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now the story document has a reference to 'aaron', its creator.  To get access to this document, you can 'populate' it to fill in all the DB-ref fields with the documents that they actually reference.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;Story  
+.findOne({ title: /Nintendo/i })
+.populate('_creator', ['name']) // &amp;lt;-- only return the Persons name
+.exec(function (err, story) {
+  if (err) ..
+
+  console.log('The creator is %s', story._creator.name);
+  // prints "The creator is Aaron"
+
+  console.log('The creators age is %s', story._creator.age)
+  // prints "The creators age is null'
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now this is all well and good, but you have to set up the query to populate.  And what if you have multiple fields you want to populate?  And what if you want to do it all the time?  It would be pain in the ass to have to include populate on every single query you write out, so we'll ship it off to Mongoose middleware to do it each time for us.&lt;/p&gt;
+
+&lt;p&gt;Shifting gears away from the stories a little, in my recent project we had a users schema that held references to organizations, projects, and tasks all of which were separate collections in their own right.&lt;/p&gt;
+
+&lt;p&gt;Here's what our user schema looked like:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var usersSchema = new Schema({  
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  organization: [{
+    type: Schema.ObjectId,
+    ref: 'Org'
+  }],
+  project_list: [{
+    type: Schema.ObjectId,
+    ref: 'Project'
+  }],
+  task_list: [{
+    type: Schema.ObjectId,
+    ref: 'Task'
+  }]
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It would be nice, no matter when you grabbed a user from the DB, it had all of those fields automatically populated, right?&lt;/p&gt;
+
+&lt;p&gt;On defining the model, you can hook into the Mongoose middleware, specifically the 'init' hook which will get fired whenever an existing model is grabbed from the DB.  Inside of the users' model definition, I added in this hook.  It makes use of the Mongoose Model's populate method.  You can pass a space delimited string of all the fields you want to populate.  Any time a user model is picked up, it will have each of those DB-ref fields filled out.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;db.usersSchema.pre('init', function(next, data) {  
+  User.populate(data, {
+    path: 'organization project_list task_list'
+  }, function(err, user) {
+    data = user;
+    next();
+  });
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I found this solution to work quite nicely with what we were trying to achieve.  We maintained separate, highly related collections.  Each collection was easy to access and update, and there was only one source of truth for each entry.  We also got access to the convenience and intuitive structure of POJOs automatically built for us with every query!  A nice little solution that gave us the best of both worlds.&lt;/p&gt;</content:encoded></item><item><title>Getting a Written Transcript for a Youtube Video Using IBM Watson</title><description>&lt;p&gt;I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript.&lt;/p&gt;
+
+&lt;p&gt;If you're the impatient type, here's the complete code. &lt;br&gt;
+&lt;a href="https://github.com/alexzywiak/youtube-transcriber"&gt;youtube-transcriber&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To illustrate, I'm going to&lt;/p&gt;</description><link>http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/</link><guid isPermaLink="false">14731786-1ffb-4b5d-a1b0-2e10b18f8cfd</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Thu, 10 Dec 2015 02:41:10 GMT</pubDate><content:encoded>&lt;p&gt;I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript.&lt;/p&gt;
+
+&lt;p&gt;If you're the impatient type, here's the complete code. &lt;br&gt;
+&lt;a href="https://github.com/alexzywiak/youtube-transcriber"&gt;youtube-transcriber&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To illustrate, I'm going to create three files.  &lt;code&gt;youtube.js&lt;/code&gt; to handle downloading the audio file, &lt;code&gt;watson.js&lt;/code&gt; to get the transcription from Watson, and &lt;code&gt;index.js&lt;/code&gt; to tie them together.  There are a handful of modules we'll have to prepare, also.&lt;/p&gt;
+
+&lt;p&gt;We're going to use &lt;a href="https://rg3.github.io/youtube-dl/"&gt;youtube-dl&lt;/a&gt; to handle getting the audio for us.  If you have &lt;code&gt;homebrew&lt;/code&gt;, install &lt;code&gt;youtube-dl&lt;/code&gt; by running:&lt;/p&gt;
+
+&lt;pre&gt;brew install youtube-dl&lt;/pre&gt;
+
+&lt;p&gt;We will have to do some audio processing as well.  &lt;code&gt;youtube-dl&lt;/code&gt; can make use of &lt;a href="https://www.ffmpeg.org/"&gt;ffmpeg&lt;/a&gt; to do all its auditory dirty work, so go ahead and install that, too.&lt;/p&gt;
+
+&lt;pre&gt;brew install ffmpeg&lt;/pre&gt;
+
+&lt;p&gt;While we're on the module train, let's prep all the necessary npm packages.&lt;/p&gt;
+
+&lt;pre&gt;npm install bluebird watson-developer-cloud fluent-ffmpeg&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Downloading Audio from Youtube&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To download the audio, we will spawn a node child process to run &lt;code&gt;youtube-dl&lt;/code&gt;.The spawn process does all the work for us.  We pass the URL of the video we want, specify only to grab the audio, set the output to mp3, and set the file name.  I have the file named simply as &lt;code&gt;file.mp3&lt;/code&gt;, but it can be changed to whatever you need.  Check the &lt;a href="https://rg3.github.io/youtube-dl/"&gt;youtube-dl&lt;/a&gt; docs for more details.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// youtube.js
+var spawn = require('child_process').spawn;  
+var Promise = require('bluebird');  
+var ffmpeg = require('fluent-ffmpeg');  
+var path = require('path');
+
+exports.getYouTubeAudio = function(videoId){  
+    return new Promise(function(resolve, reject){
+      // Install youtube_dl locally: brew install youtube-dl
+    youtube_dl = spawn('youtube-dl', ['--extract-audio', '--audio-format', 'mp3', '-o', 'file.%(ext)s', "http://www.youtube.com/watch?v=" + videoId]);
+
+    youtube_dl.stdout.on('data', function(data){
+      console.log(data.toString());
+    });
+
+    youtube_dl.stderr.on('data', function(data){
+      process.stderr.write(data);
+    });
+
+    // brew install ffmpeg
+    youtube_dl.on('exit', function(){
+      var mp3File = path.join(__dirname, 'file.mp3');
+      var flacFile = path.join(__dirname, 'file.flac')
+      ffmpeg(mp3File)
+        .output(flacFile)
+        .on('end', function(){
+          resolve();
+        })
+        .on('error', function(err){
+          reject(err);
+        })
+        .run();
+    });
+  });
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, Watson takes &lt;code&gt;flac&lt;/code&gt; files, so we'll have to convert our &lt;code&gt;mp3&lt;/code&gt;.  We can use the &lt;code&gt;fluent-ffmpeg&lt;/code&gt; module to take care of this for us.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;    //youtube.js
+    var ffmpeg = require('fluent-ffmpeg);
+...
+    youtube_dl.on('exit', function(){
+      var mp3File = path.join(__dirname, 'file.mp3');
+      var flacFile = path.join(__dirname, 'file.flac')
+      ffmpeg(mp3File)
+        .output(flacFile)
+        .on('end', function(){
+          resolve();
+        })
+        .on('error', function(err){
+          reject(err);
+        })
+        .run();
+    });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I've also used Bluebird as a promise library to resolve once the &lt;code&gt;ffmpeg&lt;/code&gt; conversion is complete, so that we can easily chain the download with our next script.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Getting a Transcript from Watson&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;In order to use Watson, you need to head on over to IBM &lt;a href="http://www.ibm.com/cloud-computing/bluemix/?cm_mmc=search-gsn-_-branded-Bluemix-general-_-bmm%20%2Bblue%20%2Bmix%20blue%20mix-_-usa-bm-mkt-oww"&gt;Bluemix&lt;/a&gt; and sign up to get some creds. &lt;/p&gt;
+
+&lt;p&gt;To use Watson in Node, the good folks at IBM were kind enough to create an &lt;a href="https://www.npmjs.com/package/watson-developer-cloud#speech-to-text"&gt;npm module&lt;/a&gt; for us.  So to get connected, include this code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// watson.js
+var watson = require('watson-developer-cloud');
+
+var speech_to_text = watson.speech_to_text({  
+  username: &amp;lt;bluemix username&amp;gt;,
+  password: &amp;lt;bluemix password&amp;gt;,
+  version: 'v1',
+  url: 'https://stream.watsonplatform.net/speech-to-text/api',
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are a few ways to send and get the transcript from Watson.  I went for streaming as you can send larger files.  As the response is streamed back, we're going to build out a json object and then write it to a file when the transcription stream is done.&lt;/p&gt;
+
+&lt;p&gt;This function will take in the path to the audio file we want to transcribe, &lt;code&gt;file.flac&lt;/code&gt; for our example, and will write the transcript to &lt;code&gt;transcript.json&lt;/code&gt;.  The &lt;code&gt;params&lt;/code&gt; option allows you to specify additional information you want Watson to include.  Here, I asked for timestamps for each word as well as to ignore silence by setting &lt;code&gt;continue&lt;/code&gt; to &lt;code&gt;true&lt;/code&gt;.  If you only want the written transcript, you can stream the output directly into a &lt;code&gt;writeStream&lt;/code&gt; to a text file.  I opted for JSON because I wanted to get at the timestamp objects.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript "&gt;// watson.js
+var watson = require('watson-developer-cloud');  
+var fs = require('fs');  
+var path = require('path');  
+var Promise = require('bluebird');
+
+var speech_to_text = watson.speech_to_text({  
+  username: '505575e5-324c-45f6-b22e-751a23d6680d',
+  password: 'UfEnWMLWZCuz',
+  version: 'v1',
+  url: 'https://stream.watsonplatform.net/speech-to-text/api',
+});
+
+exports.watsonSpeechToText = function(audioFile) {
+
+  return new Promise(function(resolve, reject) {
+
+    var params = {
+      content_type: 'audio/flac',
+      timestamps: true,
+      continuous: true
+    };
+
+    var results = [];
+
+    // create the stream
+    var recognizeStream = speech_to_text.createRecognizeStream(params);
+
+    // pipe in some audio
+    fs.createReadStream(audioFile).pipe(recognizeStream);
+
+    // listen for 'data' events for just the final text
+    // listen for 'results' events to get the raw JSON with interim results, timings, etc.
+
+    recognizeStream.setEncoding('utf8'); // to get strings instead of Buffers from `data` events
+
+    recognizeStream.on('results', function(e) {
+      if (e.results[0].final) {
+        results.push(e);
+      }
+    });
+
+    ['data', 'results', 'error', 'connection-close'].forEach(function(eventName) {
+      recognizeStream.on(eventName, console.log.bind(console, eventName + ' event: '));
+    });
+
+    recognizeStream.on('error', function(err) {
+      util.handleError('Error writing to transcript.json: ' + err);
+    });
+
+    recognizeStream.on('connection-close', function() {
+        var transcriptFile = path.join(__dirname, 'transcript.json');
+
+      fs.writeFile(transcriptFile, JSON.stringify(results), function(err) {
+        if (err) {
+          util.handleError(err);
+        }
+        resolve();
+      });
+    });
+  });
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All you need to do is chain these functions together and you will have all the transcripted goodness you would want!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Running the Show&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;index.js&lt;/code&gt; will combine our two modules and allow you to run them using the command line.  As it's set up here, run &lt;code&gt;node index.js transcribe &amp;lt;some video id&amp;gt;&lt;/code&gt; and you're up and running!&lt;/p&gt;
+
+&lt;p&gt;Give this one a try: &lt;code&gt;node index.js transcribe I9VA-U69yaY&lt;/code&gt;  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// index.js
+var watson = require('./watson');  
+var youtube = require('./youtube');  
+var path = require('path');
+
+var flags = process.argv.slice(2);
+
+if(flags[0] === 'transcribe'){  
+    youtube.getYouTubeAudio(flags[1])
+        .then(watson.watsonSpeechToText.bind(this, path.join(__dirname, 'file.flac')))
+        .then(function(){
+            console.log('Done transcribing video id: ' + flags[1]);
+        });
+}
+&lt;/code&gt;&lt;/pre&gt;</content:encoded></item><item><title>Creating a MySpace Style Full Screen Search Using Angular Directives</title><description>&lt;p&gt;MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds like the perfect place for some directives!&lt;/p&gt;
 
 &lt;p&gt;To create this&lt;/p&gt;</description><link>http://localhost:2368/creating-a-myspace-style-full-screen-search-using-angular-directives/</link><guid isPermaLink="false">822e46f0-d6ad-4cba-82c7-aa01e12153fb</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 05 Dec 2015 22:29:39 GMT</pubDate><content:encoded>&lt;p&gt;MySpace (yeah it still exists!) has a really cool UI search feature.  Just start typing and a slick full screen search interface pops up.  For a recent project we were building in Angular, we wanted to implement something similar.  Sounds like the perfect place for some directives!&lt;/p&gt;
 
@@ -76,6 +395,7 @@ If the Printing Press started the Renaissance, what can Javascript do?</descript
               // On enter
             } else if (keypressEvent.which === 13) {
               // Broadcast the search event on enter, clear the search input, and fade the search screen
+
               $rootScope.$broadcast('search', searchbar.val());
               searchbar.val('').blur();
               el.fadeOut(200);
@@ -96,20 +416,26 @@ If the Printing Press started the Renaissance, what can Javascript do?</descript
   }]);
 &lt;/code&gt;&lt;/pre&gt;
 
+&lt;p&gt;The search bar doesn't actually do anything with the search other than broadcast it out into app-land, so to add some functionality you need to subscribe to it in any of your other directives or controllers.  To do so, make sure and inject the &lt;code&gt;$rootScope&lt;/code&gt; dependency Then add in the following subscription.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;$rootScope.$on('search', function(event, query){
+  // Process Search
+});
+&lt;/code&gt;&lt;/pre&gt;
+
 &lt;p&gt;With this include a template html file.&lt;/p&gt;
 
-&lt;p&gt;```&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div id="search"&amp;gt;  
+    &amp;lt;form ng-model="searchCriteria" id="searchform"&amp;gt;
+        &amp;lt;label id="label" for="searchtext"&amp;gt;search: &amp;lt;/label&amp;gt;
+        &amp;lt;input id="searchtext" name="searchtext" type="text" /&amp;gt;
+    &amp;lt;/form&amp;gt;
+&amp;lt;/div&amp;gt;  
+&lt;/code&gt;&lt;/pre&gt;
 
-&lt;div id="search"&gt;  
-    &lt;form ng-model="searchCriteria" id="searchform"&gt;
-        &lt;label id="label" for="searchtext"&gt;search: &lt;/label&gt;
-        &lt;input id="searchtext" name="searchtext" type="text"&gt;
-    &lt;/form&gt;
-&lt;/div&gt;  
+&lt;p&gt;You need to add some CSS, which I won't go into here, to make it full screen.&lt;/p&gt;
 
-&lt;p&gt;``&lt;/p&gt;
-
-&lt;p&gt;Add some styles to make it full screen, and you're good to go!&lt;/p&gt;</content:encoded></item><item><title>Setting up a Wikipedia Factory in Angular</title><description>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to&lt;/p&gt;</description><link>http://localhost:2368/setting-up-a-wikipedia-factory-in-angular/</link><guid isPermaLink="false">f64974eb-adea-4e73-adba-c4ba56659240</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sun, 15 Nov 2015 00:53:41 GMT</pubDate><content:encoded>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to set up a basic factory in Angular to run some queries to Wikipedia that will grab an image and the article extract for a set of titles.&lt;/p&gt;
+&lt;p&gt;Add in the &lt;code&gt;&amp;lt;search&amp;gt;&amp;lt;/search&amp;gt;&lt;/code&gt; element on any page and you're good to go!&lt;/p&gt;</content:encoded></item><item><title>Setting up a Wikipedia Factory in Angular</title><description>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to&lt;/p&gt;</description><link>http://localhost:2368/setting-up-a-wikipedia-factory-in-angular/</link><guid isPermaLink="false">f64974eb-adea-4e73-adba-c4ba56659240</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sun, 15 Nov 2015 00:53:41 GMT</pubDate><content:encoded>&lt;p&gt;API's make your tiny little app look like a mother fuckin sorcerer.  With a few well placed $http calls, you can live the Dev dream and have all the data you want without actually having to go get it yourself.  To do that, I'm going to go through how to set up a basic factory in Angular to run some queries to Wikipedia that will grab an image and the article extract for a set of titles.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set up Factory&lt;/strong&gt;&lt;/p&gt;
 
