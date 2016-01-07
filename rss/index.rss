@@ -1,4 +1,171 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Sun, 13 Dec 2015 02:57:27 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Best of Both Worlds: Modelling Relational Data With Mongoose</title><description>&lt;p&gt;The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is&lt;/p&gt;</description><link>http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/</link><guid isPermaLink="false">3ca79ea9-2298-4635-88e4-318d59778625</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 12 Dec 2015 22:13:42 GMT</pubDate><content:encoded>&lt;p&gt;The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is a dev to do?&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Thu, 07 Jan 2016 20:22:57 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Streaming Audio Goodness from Amazon S3 to the Client's Ears</title><description>&lt;p&gt;Built up this cool little feature the other day for a project of mine.  I'm going to go through how I got audio files stored on Amazon's S3 to stream down from on high and play in the browser.&lt;/p&gt;
+
+&lt;p&gt;If you're only here for the code, &lt;a href="https://github.com/alexzywiak/s3StreamExample"&gt;here you go&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;If&lt;/p&gt;</description><link>http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/</link><guid isPermaLink="false">392b596b-c74e-4f9a-8158-fd6ad9d4ecdf</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 06 Jan 2016 02:58:38 GMT</pubDate><content:encoded>&lt;p&gt;Built up this cool little feature the other day for a project of mine.  I'm going to go through how I got audio files stored on Amazon's S3 to stream down from on high and play in the browser.&lt;/p&gt;
+
+&lt;p&gt;If you're only here for the code, &lt;a href="https://github.com/alexzywiak/s3StreamExample"&gt;here you go&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you don't have an &lt;a href="https://aws.amazon.com/"&gt;Amazon Web Service&lt;/a&gt; account, you're going to need to head over there to get some creds.&lt;/p&gt;
+
+&lt;p&gt;This S3 streamer will be split up into three files along with a loading GIF so users don't get impatient.&lt;/p&gt;
+
+&lt;pre&gt;
+- index.html
+- server.js
+- config.js
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Server Set Up&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;First, we'll whip up an express server to handle two routes.  One route will serve up &lt;code&gt;index.html&lt;/code&gt; and the other will stream our S3 sounds.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var express = require('express');  
+var app = express();
+
+// Serve up index.html
+app.use('/', express.static(__dirname));
+
+app.get('/audio', function(req, res) {  
+  // Add s3 streaming in here
+});
+
+// Start Listenin
+app.listen(3000, function() {  
+  console.log('makin music on 3000');
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we'll have to configure an S3 client.  I found the &lt;a href="https://www.npmjs.com/package/s3"&gt;s3&lt;/a&gt; npm module to be really easy to use.  It lets you set up a client, upload and download files without too much extra work.  That said, it's a pretty high level  module and if you need finer control over what's going on up there, check out (knox)[https://www.npmjs.com/package/knox] or the official Amazon module &lt;a href="https://www.npmjs.com/package/aws-sdk"&gt;aws-sdk&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Make sure and install &lt;code&gt;s3&lt;/code&gt; then require it in &lt;code&gt;server.js&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;npm install s3&lt;/pre&gt;
+
+&lt;p&gt;S3 will need to check out credentials first.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;var s3 = require('s3');
+
+//...
+
+// Set up s3 credentials
+var client = s3.createClient({  
+  s3Options: {
+    accessKeyId: &amp;lt;YOUR ACCESS KEY&amp;gt;,
+    secretAccessKey: &amp;lt;YOUR SECRET KEY&amp;gt;
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That done, we'll fill in our route.  To stream audio, &lt;code&gt;s3&lt;/code&gt; includes a &lt;code&gt;downloadStream&lt;/code&gt; method which will create a read stream pointed at a file stored on S3 and then pipe it down to the client response.  &lt;/p&gt;
+
+&lt;p&gt;To tell &lt;code&gt;s3&lt;/code&gt; which file we want to download, we need to pass it the name of the S3 Bucket it is stored in as well as its Key value.  I have an mp3 file cleverly named &lt;code&gt;test.mp3&lt;/code&gt; stored in a bucket named &lt;code&gt;New-Bucket-1020&lt;/code&gt;.  Of course, yours can be named whatever your heart desires.  We'll save the bucket and key information in a &lt;code&gt;params&lt;/code&gt; object and pass that to the &lt;code&gt;downloadStream&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;We'll attach two event listeners onto the download stream.  One to check for errors and send a 404 if the files doesn't exist, and the other to listen for incoming headers.  When the headers come in, we'll send that information down to the client so it knows what the hell is going on.&lt;/p&gt;
+
+&lt;p&gt;Finally, we'll pipe &lt;code&gt;downloadStream&lt;/code&gt; to the response to get the tunes flowing.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;app.get('/audio', function(req, res) {
+
+  var params = {
+    Bucket: 'New-Bucket-1020',
+    Key: 'test.mp3'
+  };
+
+  var downloadStream = client.downloadStream(params);
+
+  downloadStream.on('error', function() {
+    res.status(404).send('Not Found');
+  });
+  downloadStream.on('httpHeaders', function(statusCode, headers, resp) {
+    // Set Headers
+    res.set({
+      'Content-Type': headers['content-type']
+    });
+  });
+
+  // Pipe download stream to response
+  downloadStream.pipe(res);
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up the Client&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;On &lt;code&gt;index.html&lt;/code&gt; we'll render two buttons, &lt;code&gt;play&lt;/code&gt; and &lt;code&gt;stop&lt;/code&gt;, which will do exactly what you hope they would.  &lt;/p&gt;
+
+&lt;p&gt;We'll include a script that will start by grabbing the browser's &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext"&gt;AudioContext&lt;/a&gt; so we can get access to the speakers.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;play&lt;/code&gt; button will call the &lt;code&gt;playTunes&lt;/code&gt; function which will trigger an ajax request to our server which will start the audio stream.  When the data comes through, we'll put it through a helper function, &lt;code&gt;process&lt;/code&gt; which will do most of our work.  The &lt;code&gt;process&lt;/code&gt; function will create a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createBufferSource"&gt;buffer source node&lt;/a&gt;, &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/decodeAudioData"&gt;decode&lt;/a&gt; the Data from our stream, plug it into the user's speakers, and tell the source to start playing.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;    window.AudioContext = window.AudioContext ||     window.webkitAudioContext;
+    var context = new AudioContext();
+
+// ...
+
+    function playTunes() {
+      var request = new XMLHttpRequest();
+      request.open("GET", "http://localhost:3000/audio/", true);
+      request.responseType = "arraybuffer";
+
+      spinner.show();
+
+      request.onload = function() {
+          spinner.hide();
+        var Data = request.response;
+        process(Data);
+      };
+
+      request.send();
+    }
+
+    function process(Data) {
+      source = context.createBufferSource(); // Create Sound Source
+      context.decodeAudioData(Data, function(buffer) {
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.start(context.currentTime);
+      });
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Lastly, we'll add a function to stop the music, and some logic to show/hide a spinner gif while we're waiting for the stream to come on down from the server.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;    var spinner = document.getElementById('spinner');
+
+    spinner.hide = function(){
+        this.style.display = 'none';
+    };
+
+    spinner.show = function(){
+        this.style.display = 'block';
+    }
+
+    function stopTunes(){
+        if(source.stop){
+            source.stop();
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our HTML will look like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;&amp;lt;!DOCTYPE html&amp;gt;  
+&amp;lt;html&amp;gt;  
+&amp;lt;head&amp;gt;  
+    &amp;lt;title&amp;gt;S3 Audio&amp;lt;/title&amp;gt;
+&amp;lt;/head&amp;gt;  
+&amp;lt;body&amp;gt;  
+    &amp;lt;button onclick="playTunes()"&amp;gt;Play&amp;lt;/button&amp;gt;
+    &amp;lt;button onclick="stopTunes()"&amp;gt;Stop&amp;lt;/button&amp;gt;
+    &amp;lt;div&amp;gt;
+        &amp;lt;img id="spinner" style="display:none" src="ajax-loader.gif" alt=""&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;script&amp;gt; // app logic &amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt;  
+&amp;lt;/html&amp;gt;  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So there it is!  A quick way to stream audio samples down from S3.  Full code is right &lt;a href="https://github.com/alexzywiak/s3StreamExample"&gt;here&lt;/a&gt;.&lt;/p&gt;</content:encoded></item><item><title>Best of Both Worlds: Modelling Relational Data With Mongoose</title><description>&lt;p&gt;The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is&lt;/p&gt;</description><link>http://localhost:2368/best-of-both-worlds-modelling-relational-data-with-mongoose/</link><guid isPermaLink="false">3ca79ea9-2298-4635-88e4-318d59778625</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sat, 12 Dec 2015 22:13:42 GMT</pubDate><content:encoded>&lt;p&gt;The relational debate rages on.  On the relational side of things, you have single sources of truth, all the joins you could possibly want, and fast queries on everything you could possibly imagine. Then you got the rebels tossing around POJOs and rapidly iterating the super loose tables.  What is a dev to do?&lt;/p&gt;
 
 &lt;p&gt;I was working on a project where we were modelling some highly related data using MongoDB, projects as parts of an organization, and we came up against the inevitable existential question, to embed or not to embed?&lt;/p&gt;
 

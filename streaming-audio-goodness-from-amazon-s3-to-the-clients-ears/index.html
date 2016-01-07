@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>Streaming Audio Goodness from Amazon S3 to the Client&#x27;s Ears</title>
+    <meta name="description" content="" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=1b59c40df9" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=1b59c40df9" />
+    <link rel="canonical" href="index.html" />
+    <meta name="referrer" content="origin" />
+    
+    <meta property="og:site_name" content="Lingua Franca" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Streaming Audio Goodness from Amazon S3 to the Client&#x27;s Ears" />
+    <meta property="og:description" content="Built up this cool little feature the other day for a project of mine.  I&#x27;m going to go through how I got audio files stored on Amazon&#x27;s S3 to stream down from on high and play in the browser. If..." />
+    <meta property="og:url" content="http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/" />
+    <meta property="article:published_time" content="2016-01-06T02:58:38.315Z" />
+    <meta property="article:modified_time" content="2016-01-07T20:20:25.985Z" />
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Streaming Audio Goodness from Amazon S3 to the Client&#x27;s Ears" />
+    <meta name="twitter:description" content="Built up this cool little feature the other day for a project of mine.  I&#x27;m going to go through how I got audio files stored on Amazon&#x27;s S3 to stream down from on high and play in the browser. If..." />
+    <meta name="twitter:url" content="http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Streaming Audio Goodness from Amazon S3 to the Client&#x27;s Ears",
+    "url": "http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/",
+    "datePublished": "2016-01-06T02:58:38.315Z",
+    "dateModified": "2016-01-07T20:20:25.985Z",
+    "description": "Built up this cool little feature the other day for a project of mine.  I&#x27;m going to go through how I got audio files stored on Amazon&#x27;s S3 to stream down from on high and play in the browser. If..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7" />
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html" />
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../index.html">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.html">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Streaming Audio Goodness from Amazon S3 to the Client&#x27;s Ears</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-01-05">05 January 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>Built up this cool little feature the other day for a project of mine.  I'm going to go through how I got audio files stored on Amazon's S3 to stream down from on high and play in the browser.</p>
+
+<p>If you're only here for the code, <a href="https://github.com/alexzywiak/s3StreamExample">here you go</a>.</p>
+
+<p>If you don't have an <a href="https://aws.amazon.com/">Amazon Web Service</a> account, you're going to need to head over there to get some creds.</p>
+
+<p>This S3 streamer will be split up into three files along with a loading GIF so users don't get impatient.</p>
+
+<pre>
+- index.html
+- server.js
+- config.js
+</pre>
+
+<p><strong>Server Set Up</strong></p>
+
+<p>First, we'll whip up an express server to handle two routes.  One route will serve up <code>index.html</code> and the other will stream our S3 sounds.</p>
+
+<pre><code class="language-javascript">var express = require('express');  
+var app = express();
+
+// Serve up index.html
+app.use('/', express.static(__dirname));
+
+app.get('/audio', function(req, res) {  
+  // Add s3 streaming in here
+});
+
+// Start Listenin
+app.listen(3000, function() {  
+  console.log('makin music on 3000');
+});
+</code></pre>
+
+<p>Next, we'll have to configure an S3 client.  I found the <a href="https://www.npmjs.com/package/s3">s3</a> npm module to be really easy to use.  It lets you set up a client, upload and download files without too much extra work.  That said, it's a pretty high level  module and if you need finer control over what's going on up there, check out (knox)[https://www.npmjs.com/package/knox] or the official Amazon module <a href="https://www.npmjs.com/package/aws-sdk">aws-sdk</a>.</p>
+
+<p>Make sure and install <code>s3</code> then require it in <code>server.js</code>.</p>
+
+<pre>npm install s3</pre>
+
+<p>S3 will need to check out credentials first.</p>
+
+<pre><code class="language-javascript">var s3 = require('s3');
+
+//...
+
+// Set up s3 credentials
+var client = s3.createClient({  
+  s3Options: {
+    accessKeyId: &lt;YOUR ACCESS KEY&gt;,
+    secretAccessKey: &lt;YOUR SECRET KEY&gt;
+  }
+});
+</code></pre>
+
+<p>That done, we'll fill in our route.  To stream audio, <code>s3</code> includes a <code>downloadStream</code> method which will create a read stream pointed at a file stored on S3 and then pipe it down to the client response.  </p>
+
+<p>To tell <code>s3</code> which file we want to download, we need to pass it the name of the S3 Bucket it is stored in as well as its Key value.  I have an mp3 file cleverly named <code>test.mp3</code> stored in a bucket named <code>New-Bucket-1020</code>.  Of course, yours can be named whatever your heart desires.  We'll save the bucket and key information in a <code>params</code> object and pass that to the <code>downloadStream</code> method.</p>
+
+<p>We'll attach two event listeners onto the download stream.  One to check for errors and send a 404 if the files doesn't exist, and the other to listen for incoming headers.  When the headers come in, we'll send that information down to the client so it knows what the hell is going on.</p>
+
+<p>Finally, we'll pipe <code>downloadStream</code> to the response to get the tunes flowing.</p>
+
+<pre><code class="language-javascript">app.get('/audio', function(req, res) {
+
+  var params = {
+    Bucket: 'New-Bucket-1020',
+    Key: 'test.mp3'
+  };
+
+  var downloadStream = client.downloadStream(params);
+
+  downloadStream.on('error', function() {
+    res.status(404).send('Not Found');
+  });
+  downloadStream.on('httpHeaders', function(statusCode, headers, resp) {
+    // Set Headers
+    res.set({
+      'Content-Type': headers['content-type']
+    });
+  });
+
+  // Pipe download stream to response
+  downloadStream.pipe(res);
+});
+</code></pre>
+
+<p><strong>Set Up the Client</strong></p>
+
+<p>On <code>index.html</code> we'll render two buttons, <code>play</code> and <code>stop</code>, which will do exactly what you hope they would.  </p>
+
+<p>We'll include a script that will start by grabbing the browser's <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext">AudioContext</a> so we can get access to the speakers.</p>
+
+<p>The <code>play</code> button will call the <code>playTunes</code> function which will trigger an ajax request to our server which will start the audio stream.  When the data comes through, we'll put it through a helper function, <code>process</code> which will do most of our work.  The <code>process</code> function will create a <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createBufferSource">buffer source node</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/decodeAudioData">decode</a> the Data from our stream, plug it into the user's speakers, and tell the source to start playing.</p>
+
+<pre><code class="language-javascript">    window.AudioContext = window.AudioContext ||     window.webkitAudioContext;
+    var context = new AudioContext();
+
+// ...
+
+    function playTunes() {
+      var request = new XMLHttpRequest();
+      request.open("GET", "http://localhost:3000/audio/", true);
+      request.responseType = "arraybuffer";
+
+      spinner.show();
+
+      request.onload = function() {
+          spinner.hide();
+        var Data = request.response;
+        process(Data);
+      };
+
+      request.send();
+    }
+
+    function process(Data) {
+      source = context.createBufferSource(); // Create Sound Source
+      context.decodeAudioData(Data, function(buffer) {
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.start(context.currentTime);
+      });
+    }
+</code></pre>
+
+<p>Lastly, we'll add a function to stop the music, and some logic to show/hide a spinner gif while we're waiting for the stream to come on down from the server.</p>
+
+<pre><code class="language-javascript">    var spinner = document.getElementById('spinner');
+
+    spinner.hide = function(){
+        this.style.display = 'none';
+    };
+
+    spinner.show = function(){
+        this.style.display = 'block';
+    }
+
+    function stopTunes(){
+        if(source.stop){
+            source.stop();
+        }
+    }
+</code></pre>
+
+<p>Our HTML will look like this.</p>
+
+<pre><code class="language-javascript">&lt;!DOCTYPE html&gt;  
+&lt;html&gt;  
+&lt;head&gt;  
+    &lt;title&gt;S3 Audio&lt;/title&gt;
+&lt;/head&gt;  
+&lt;body&gt;  
+    &lt;button onclick="playTunes()"&gt;Play&lt;/button&gt;
+    &lt;button onclick="stopTunes()"&gt;Stop&lt;/button&gt;
+    &lt;div&gt;
+        &lt;img id="spinner" style="display:none" src="ajax-loader.gif" alt=""&gt;
+    &lt;/div&gt;
+    &lt;script&gt; // app logic &lt;/script&gt;
+&lt;/body&gt;  
+&lt;/html&gt;  
+</code></pre>
+
+<p>So there it is!  A quick way to stream audio samples down from S3.  Full code is right <a href="https://github.com/alexzywiak/s3StreamExample">here</a>.</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/index.html">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/index.html">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Streaming%20Audio%20Goodness%20from%20Amazon%20S3%20to%20the%20Client's%20Ears&amp;url=http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../best-of-both-worlds-modelling-relational-data-with-mongoose/index.html">
+        <section class="post">
+            <h2>Best of Both Worlds: Modelling Relational Data With Mongoose</h2>
+            <p>The relational debate rages on.  On the relational side of things, you have single sources of truth, all the&hellip;</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../index.html">Lingua Franca</a> &copy; 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=1b59c40df9"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=1b59c40df9"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=1b59c40df9"></script> 
+
+</body>
+</html>
