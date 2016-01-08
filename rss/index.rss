@@ -1,4 +1,111 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Thu, 07 Jan 2016 20:22:57 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Streaming Audio Goodness from Amazon S3 to the Client's Ears</title><description>&lt;p&gt;Built up this cool little feature the other day for a project of mine.  I'm going to go through how I got audio files stored on Amazon's S3 to stream down from on high and play in the browser.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Fri, 08 Jan 2016 00:20:17 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Spinning up a NodeJS Server from Scratch on Digital Ocean</title><description>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do as you please.  It's a refreshingly transparent system after the&lt;/p&gt;</description><link>http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/</link><guid isPermaLink="false">62334f29-188f-45a6-944d-79ccac7c2737</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 08 Jan 2016 00:20:09 GMT</pubDate><content:encoded>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do as you please.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.&lt;/p&gt;
+
+&lt;p&gt;What I'll walk through here is setting up a Digital Ocean droplet, their clever euphemism for a server instance.  Once we have our droplet set up, we'll install the necessary NodeJS packages, install Git, and clone over a repository.  Once we have that going, we'll add in some last little tweaks to get the server up and running and ready to go.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set Up a Droplet&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;First up, head on over to &lt;a href="https://www.digitalocean.com/"&gt;Digital Ocean&lt;/a&gt; and sign yourself up.&lt;/p&gt;
+
+&lt;p&gt;Before you hit that enticing little 'Create Droplet' button, let's set up an SSH key to make our lives easier.  After logging in, navigate to &lt;a href="https://cloud.digitalocean.com/settings/security"&gt;Settings &gt; User &gt; Security&lt;/a&gt; and click 'Add SSH Key'.  &lt;/p&gt;
+
+&lt;p&gt;Follow the instructions &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-digitalocean-droplets"&gt;here&lt;/a&gt; or TL;DR:&lt;/p&gt;
+
+&lt;p&gt;In your terminal:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ssh-keygen -t rsa  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Save the file.  Passphrase optional. Then type out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; cat ~/.ssh/id_rsa.pub
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will print out the public SSH key, which you can then paste into the text area in the Security page.  Give the key a name, and save it.&lt;/p&gt;
+
+&lt;p&gt;At this point, go ahead and hit 'Create a Droplet`.  Get to run on Ubuntu, the default, and choose your size and location.  Make sure to &lt;strong&gt;add the SSH key you just created&lt;/strong&gt; in the 'Add Your SSH Keys' section!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set up Your Environment&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The droplet is up a running at this point, let's get it to do its job.  In the droplet menu, copy the IP address of your new droplet.  Then open up your terminal, and type the following.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ssh root@YOUR DROPLET IP&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Tell it 'yes', and you're in!&lt;/p&gt;
+
+&lt;p&gt;To start setting up the server environment, we'll use &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-manage-packages-in-ubuntu-and-debian-with-apt-get-apt-cache"&gt;apt-get&lt;/a&gt; as a package manager.&lt;/p&gt;
+
+&lt;p&gt;First off run:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;apt-get update&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Then install some essentials:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;apt-get install nodejs npm git&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Then it's as simple as running &lt;code&gt;git clone&lt;/code&gt; to grab your repository of choice.  Once in there, an &lt;code&gt;npm install&lt;/code&gt; will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Setting up an App Server&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is a summation of this excellent &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-14-04"&gt;Digital Ocean Tutorial&lt;/a&gt;. &lt;/p&gt;
+
+&lt;p&gt;To run the node server on the droplet, we'll use PM2 as a process manager.  &lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;apt-get install pm2&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;pm2 will be responsible for handling our &lt;strong&gt;app server&lt;/strong&gt; on our droplet. Run pm2 start to get things going.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;pm2 start &amp;lt;server file&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;At this point, if you visit your droplet's IP:&lt;port&gt; in your browser, you should see your app up and running.&lt;/port&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Setting Up a Web Server&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Again, referencing &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-14-04"&gt;Digital Ocean Tutorial&lt;/a&gt;. &lt;/p&gt;
+
+&lt;p&gt;Digital Ocean recommends setting up a Reverse Proxy with &lt;a href="https://www.nginx.com/"&gt;nginx&lt;/a&gt; as a &lt;strong&gt;web server&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using &lt;code&gt;apt-get&lt;/code&gt;, and then will set up a config file to route incoming requests to the proper IP.&lt;/p&gt;
+
+&lt;p&gt;apt-get install nginx&lt;/p&gt;
+
+&lt;p&gt;Then to get at the config file we need:&lt;/p&gt;
+
+&lt;p&gt;vi /etc/nginx/sites-available/default&lt;/p&gt;
+
+&lt;p&gt;And then, as per the Digital Ocean tutorial, replace the contents of that file with the following:&lt;/p&gt;
+
+&lt;p&gt;server { &lt;br&gt;
+    listen 80;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server_name example.com;
+
+location / {
+    proxy_pass http://APP_PRIVATE_IP_ADDRESS:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;}&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set up DNS&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For reference, here's &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-a-host-name-with-digitalocean"&gt;Digital Ocean's Guide&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have that the app and web servers up and running on your droplet, its a matter of setting up your DNS to point to it. First head on over to the service that manages your domain name, goDaddy etc., and point the nameservers associated with your domain name to:&lt;/p&gt;
+
+&lt;p&gt;NS1.DIGITALOCEAN.COM &lt;br&gt;
+NS2.DIGITALOCEAN.COM &lt;br&gt;
+NS3.DIGITALOCEAN.COM&lt;/p&gt;
+
+&lt;p&gt;Next, in your Digital Ocean Dashboard, navigate to the Networking &gt; Domain menu.  While there, in the appropriate fields, fill in your domain name and your droplet of choice and hit 'Create Record'.  &lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Conclusion&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;That should get you where you need to be.  Your app is live and hosted on a domain name of your choice!  Digital Ocean takes a bit more set up than something like Heroku, but you also have a lot more control over how things are being run on your server!&lt;/p&gt;</content:encoded></item><item><title>Streaming Audio Goodness from Amazon S3 to the Client's Ears</title><description>&lt;p&gt;Built up this cool little feature the other day for a project of mine.  I'm going to go through how I got audio files stored on Amazon's S3 to stream down from on high and play in the browser.&lt;/p&gt;
 
 &lt;p&gt;If you're only here for the code, &lt;a href="https://github.com/alexzywiak/s3StreamExample"&gt;here you go&lt;/a&gt;.&lt;/p&gt;
 
