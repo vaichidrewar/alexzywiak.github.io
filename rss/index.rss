@@ -1,14 +1,16 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Fri, 08 Jan 2016 00:20:17 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Spinning up a NodeJS Server from Scratch on Digital Ocean</title><description>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do as you please.  It's a refreshingly transparent system after the&lt;/p&gt;</description><link>http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/</link><guid isPermaLink="false">62334f29-188f-45a6-944d-79ccac7c2737</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 08 Jan 2016 00:20:09 GMT</pubDate><content:encoded>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do as you please.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Thu, 14 Jan 2016 04:03:25 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Spinning up a NodeJS Server from Scratch on Digital Ocean</title><description>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system&lt;/p&gt;</description><link>http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/</link><guid isPermaLink="false">62334f29-188f-45a6-944d-79ccac7c2737</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 08 Jan 2016 00:20:09 GMT</pubDate><content:encoded>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.&lt;/p&gt;
 
-&lt;p&gt;What I'll walk through here is setting up a Digital Ocean droplet, their clever euphemism for a server instance.  Once we have our droplet set up, we'll install the necessary NodeJS packages, install Git, and clone over a repository.  Once we have that going, we'll add in some last little tweaks to get the server up and running and ready to go.&lt;/p&gt;
+&lt;p&gt;What I'll walk through here is setting up a Digital Ocean droplet, their clever euphemism for a server instance.  Once we have our droplet set up, we'll install the necessary NodeJS packages, install Git, and clone over a repository.  Once we have that going, we'll briefly go through how to set up your DNS to point to your droplet and how to get the server to respond appropriately to traffic.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set Up a Droplet&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;First up, head on over to &lt;a href="https://www.digitalocean.com/"&gt;Digital Ocean&lt;/a&gt; and sign yourself up.&lt;/p&gt;
 
-&lt;p&gt;Before you hit that enticing little 'Create Droplet' button, let's set up an SSH key to make our lives easier.  After logging in, navigate to &lt;a href="https://cloud.digitalocean.com/settings/security"&gt;Settings &gt; User &gt; Security&lt;/a&gt; and click 'Add SSH Key'.  &lt;/p&gt;
+&lt;p&gt;Before you hit that enticing little 'Create Droplet' button, let's set up an SSH key to make our lives easier.  An SSH key will allow you to directly access your droplet's file system from your terminal.  After logging in, navigate to &lt;a href="https://cloud.digitalocean.com/settings/security"&gt;Settings &gt; User &gt; Security&lt;/a&gt; and click 'Add SSH Key'.  &lt;/p&gt;
 
-&lt;p&gt;Follow the instructions &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-digitalocean-droplets"&gt;here&lt;/a&gt; or TL;DR:&lt;/p&gt;
+&lt;p&gt;For more detailed instructions, follow Digital Ocean's own excellent tutorial on SSH keys &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-digitalocean-droplets"&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Alternatively, TL;DR:&lt;/p&gt;
 
 &lt;p&gt;In your terminal:&lt;/p&gt;
 
@@ -22,7 +24,7 @@
 
 &lt;p&gt;This will print out the public SSH key, which you can then paste into the text area in the Security page.  Give the key a name, and save it.&lt;/p&gt;
 
-&lt;p&gt;At this point, go ahead and hit 'Create a Droplet`.  Get to run on Ubuntu, the default, and choose your size and location.  Make sure to &lt;strong&gt;add the SSH key you just created&lt;/strong&gt; in the 'Add Your SSH Keys' section!&lt;/p&gt;
+&lt;p&gt;At this point, go ahead and hit 'Create a Droplet`.  Get it to run on Ubuntu, the default, and choose your size and location.  Make sure to &lt;strong&gt;add the SSH key you just created&lt;/strong&gt; in the 'Add Your SSH Keys' section!&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set up Your Environment&lt;/strong&gt;&lt;/p&gt;
 
@@ -42,7 +44,7 @@
 
 &lt;p&gt;&lt;code&gt;apt-get install nodejs npm git&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;Then it's as simple as running &lt;code&gt;git clone&lt;/code&gt; to grab your repository of choice.  Once in there, an &lt;code&gt;npm install&lt;/code&gt; will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm.&lt;/p&gt;
+&lt;p&gt;Then it's as simple as running &lt;code&gt;git clone &amp;lt;your repo URL of choice&amp;gt;&lt;/code&gt; in your droplet.  Once in there, an &lt;code&gt;npm install&lt;/code&gt; will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm and build away.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Setting up an App Server&lt;/strong&gt;&lt;/p&gt;
 
@@ -56,7 +58,7 @@
 
 &lt;p&gt;&lt;code&gt;pm2 start &amp;lt;server file&amp;gt;&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;At this point, if you visit your droplet's IP:&lt;port&gt; in your browser, you should see your app up and running.&lt;/port&gt;&lt;/p&gt;
+&lt;p&gt;At this point, if you visit your droplet's IP:&amp;lt; port #&gt; in your browser, you should see your app up and running.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Setting Up a Web Server&lt;/strong&gt;&lt;/p&gt;
 
@@ -64,17 +66,17 @@
 
 &lt;p&gt;Digital Ocean recommends setting up a Reverse Proxy with &lt;a href="https://www.nginx.com/"&gt;nginx&lt;/a&gt; as a &lt;strong&gt;web server&lt;/strong&gt;.&lt;/p&gt;
 
-&lt;p&gt;nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using &lt;code&gt;apt-get&lt;/code&gt;, and then will set up a config file to route incoming requests to the proper IP.&lt;/p&gt;
+&lt;p&gt;Essentially, nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using &lt;code&gt;apt-get&lt;/code&gt;, and then will set up a config file to route incoming requests to the proper IP.&lt;/p&gt;
 
-&lt;p&gt;apt-get install nginx&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt-get install nginx&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;Then to get at the config file we need:&lt;/p&gt;
 
-&lt;p&gt;vi /etc/nginx/sites-available/default&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;vi /etc/nginx/sites-available/default&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;And then, as per the Digital Ocean tutorial, replace the contents of that file with the following:&lt;/p&gt;
 
-&lt;p&gt;server { &lt;br&gt;
+&lt;p&gt;{
     listen 80;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;server_name example.com;

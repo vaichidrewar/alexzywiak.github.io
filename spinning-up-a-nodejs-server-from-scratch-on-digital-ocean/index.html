@@ -12,23 +12,23 @@
 
     <link rel="shortcut icon" href="../favicon.ico">
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=62119b0b5f" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=d6797cad28" />
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
-		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=62119b0b5f" />
+		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=d6797cad28" />
     <link rel="canonical" href="index.html" />
     <meta name="referrer" content="origin" />
     
     <meta property="og:site_name" content="Lingua Franca" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Spinning up a NodeJS Server from Scratch on Digital Ocean" />
-    <meta property="og:description" content="Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do..." />
+    <meta property="og:description" content="Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server&#x27;s file system where you can npm, grunt, and..." />
     <meta property="og:url" content="http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/" />
     <meta property="article:published_time" content="2016-01-08T00:20:09.094Z" />
-    <meta property="article:modified_time" content="2016-01-08T00:20:09.093Z" />
+    <meta property="article:modified_time" content="2016-01-14T03:38:16.554Z" />
     
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Spinning up a NodeJS Server from Scratch on Digital Ocean" />
-    <meta name="twitter:description" content="Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do..." />
+    <meta name="twitter:description" content="Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server&#x27;s file system where you can npm, grunt, and..." />
     <meta name="twitter:url" content="http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/" />
     
     <script type="application/ld+json">
@@ -46,8 +46,8 @@
     "headline": "Spinning up a NodeJS Server from Scratch on Digital Ocean",
     "url": "http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/",
     "datePublished": "2016-01-08T00:20:09.094Z",
-    "dateModified": "2016-01-08T00:20:09.093Z",
-    "description": "Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do..."
+    "dateModified": "2016-01-14T03:38:16.554Z",
+    "description": "Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server&#x27;s file system where you can npm, grunt, and..."
 }
     </script>
 
@@ -92,17 +92,19 @@
         </header>
 
         <section class="post-content">
-            <p>Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI file system where you can npm, grunt, install and generally do as you please.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.</p>
+            <p>Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.</p>
 
-<p>What I'll walk through here is setting up a Digital Ocean droplet, their clever euphemism for a server instance.  Once we have our droplet set up, we'll install the necessary NodeJS packages, install Git, and clone over a repository.  Once we have that going, we'll add in some last little tweaks to get the server up and running and ready to go.</p>
+<p>What I'll walk through here is setting up a Digital Ocean droplet, their clever euphemism for a server instance.  Once we have our droplet set up, we'll install the necessary NodeJS packages, install Git, and clone over a repository.  Once we have that going, we'll briefly go through how to set up your DNS to point to your droplet and how to get the server to respond appropriately to traffic.</p>
 
 <p><strong>Set Up a Droplet</strong></p>
 
 <p>First up, head on over to <a href="https://www.digitalocean.com/">Digital Ocean</a> and sign yourself up.</p>
 
-<p>Before you hit that enticing little 'Create Droplet' button, let's set up an SSH key to make our lives easier.  After logging in, navigate to <a href="https://cloud.digitalocean.com/settings/security">Settings > User > Security</a> and click 'Add SSH Key'.  </p>
+<p>Before you hit that enticing little 'Create Droplet' button, let's set up an SSH key to make our lives easier.  An SSH key will allow you to directly access your droplet's file system from your terminal.  After logging in, navigate to <a href="https://cloud.digitalocean.com/settings/security">Settings > User > Security</a> and click 'Add SSH Key'.  </p>
 
-<p>Follow the instructions <a href="https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-digitalocean-droplets">here</a> or TL;DR:</p>
+<p>For more detailed instructions, follow Digital Ocean's own excellent tutorial on SSH keys <a href="https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-digitalocean-droplets">here</a></p>
+
+<p>Alternatively, TL;DR:</p>
 
 <p>In your terminal:</p>
 
@@ -116,7 +118,7 @@
 
 <p>This will print out the public SSH key, which you can then paste into the text area in the Security page.  Give the key a name, and save it.</p>
 
-<p>At this point, go ahead and hit 'Create a Droplet`.  Get to run on Ubuntu, the default, and choose your size and location.  Make sure to <strong>add the SSH key you just created</strong> in the 'Add Your SSH Keys' section!</p>
+<p>At this point, go ahead and hit 'Create a Droplet`.  Get it to run on Ubuntu, the default, and choose your size and location.  Make sure to <strong>add the SSH key you just created</strong> in the 'Add Your SSH Keys' section!</p>
 
 <p><strong>Set up Your Environment</strong></p>
 
@@ -136,7 +138,7 @@
 
 <p><code>apt-get install nodejs npm git</code></p>
 
-<p>Then it's as simple as running <code>git clone</code> to grab your repository of choice.  Once in there, an <code>npm install</code> will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm.</p>
+<p>Then it's as simple as running <code>git clone &lt;your repo URL of choice&gt;</code> in your droplet.  Once in there, an <code>npm install</code> will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm and build away.</p>
 
 <p><strong>Setting up an App Server</strong></p>
 
@@ -150,7 +152,7 @@
 
 <p><code>pm2 start &lt;server file&gt;</code></p>
 
-<p>At this point, if you visit your droplet's IP:<port> in your browser, you should see your app up and running.</p>
+<p>At this point, if you visit your droplet's IP:&lt; port #> in your browser, you should see your app up and running.</p>
 
 <p><strong>Setting Up a Web Server</strong></p>
 
@@ -158,17 +160,17 @@
 
 <p>Digital Ocean recommends setting up a Reverse Proxy with <a href="https://www.nginx.com/">nginx</a> as a <strong>web server</strong>.</p>
 
-<p>nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using <code>apt-get</code>, and then will set up a config file to route incoming requests to the proper IP.</p>
+<p>Essentially, nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using <code>apt-get</code>, and then will set up a config file to route incoming requests to the proper IP.</p>
 
-<p>apt-get install nginx</p>
+<p><code>apt-get install nginx</code></p>
 
 <p>Then to get at the config file we need:</p>
 
-<p>vi /etc/nginx/sites-available/default</p>
+<p><code>vi /etc/nginx/sites-available/default</code></p>
 
 <p>And then, as per the Digital Ocean tutorial, replace the contents of that file with the following:</p>
 
-<p>server { <br />
+<p>{
     listen 80;</p>
 
 <pre><code>server_name example.com;
@@ -259,9 +261,9 @@ NS3.DIGITALOCEAN.COM</p>
     
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=62119b0b5f"></script>
-    <script type="text/javascript" src="../assets/js/index.js?v=62119b0b5f"></script>
-    <script type="text/javascript" src="../assets/js/prism.js?v=62119b0b5f"></script> 
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=d6797cad28"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=d6797cad28"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=d6797cad28"></script> 
 
 </body>
 </html>
