@@ -1,0 +1,330 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Managing Multiple Child Processes in NodeJS</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=21ac6c8e80">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=21ac6c8e80">
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="origin">
+    
+    <meta property="og:site_name" content="Lingua Franca">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Managing Multiple Child Processes in NodeJS">
+    <meta property="og:description" content="In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments....">
+    <meta property="og:url" content="http://localhost:2368/managing-multiple-child-processes-in-nodejs/">
+    <meta property="article:published_time" content="2016-01-20T23:02:38.316Z">
+    <meta property="article:modified_time" content="2016-01-20T23:02:38.313Z">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Managing Multiple Child Processes in NodeJS">
+    <meta name="twitter:description" content="In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments....">
+    <meta name="twitter:url" content="http://localhost:2368/managing-multiple-child-processes-in-nodejs/">
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Managing Multiple Child Processes in NodeJS",
+    "url": "http://localhost:2368/managing-multiple-child-processes-in-nodejs/",
+    "datePublished": "2016-01-20T23:02:38.316Z",
+    "dateModified": "2016-01-20T23:02:38.313Z",
+    "description": "In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments...."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7">
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html">
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Managing Multiple Child Processes in NodeJS</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-01-20">20 January 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate child processes and then limiting the total concurrent number of processes running at any given time.</p>
+
+<p>In this post, I'm going to go through the steps I came up with.  First, how to create a child process in a separate file and run it using the <code>spawn</code> method.  Next, how to promisify the process and pass arguments to it.  Lastly, how to queue up a whole bunch of those processes and limiting the total number that will be run concurrently.</p>
+
+<p>If you're just here for some sweet code, <a href="https://github.com/alexzywiak/nodejs-childprocesses-bluebird">here's</a> the repo with the example code.</p>
+
+<p><strong>Outsourcing a Child Process</strong></p>
+
+<p>The only npm dependency we'll need is <code>bluebird</code></p>
+
+<pre><code>npm init  
+npm install --save bluebird  
+</code></pre>
+
+<p>Our driver file will be in <code>index.js</code> and we'll put our child process login in <code>process.js</code>. </p>
+
+<pre><code>├── index.js
+├── node_modules
+├── package.json
+└── process.js
+</code></pre>
+
+<p>We'll use a trivial example for our child process logic.  It will run a <code>setTimeout</code> function to simulate a delay.  It will send data to the parent process using <a href="https://nodejs.org/api/process.html#process_process_stdout">process.stdout</a>.  It will send some trivial data when it is initiated and again after two seconds when it is completed.</p>
+
+<pre><code>// process.js
+
+    process.stdout.write('Process beginning.');
+
+    setTimeout(function(){
+        process.stdout.write('Process complete.');
+    }, 2000);
+</code></pre>
+
+<p>Our <code>index.js</code> file will use the <a href="https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options">spawn</a> function from Node's <code>child_process</code> module to call <code>process.js</code>.  Spawn needs to be passed in two parameters to run and external file.  The first is the command to run the file, in this case <code>node</code>, and the second is an array of arguments, the first of which, will be the file path of the file we would like to run, in this case <code>'./process.js'</code>.</p>
+
+<p>Our child process is sending data through the <code>process.stdout.write()</code> function, but we need to set up listeners in the parent process to get access to that data and simply write it to the console.  The data that comes back is in the form of a <code>buffer</code> so we'll have to call buffer's <code>.toString</code> method on it to convert into something comprehensible. </p>
+
+<p>We'll set up listeners for three events on the child, a data event from <code>process.stdout</code>, data in the case of an error from <code>process.stderr</code> and finally, we'll listen for the <code>exit</code> event on <code>process</code>.  </p>
+
+<pre><code>// index.js
+var spawn = require('child_process').spawn;  
+var bbPromise = require('bluebird');
+
+function loadProcess() {
+
+  var process = spawn('node', ['./process.js']);
+
+  process.stdout.on('data', function(data) {
+    console.log(data.toString());
+  });
+
+  process.stderr.on('data', function(err) {
+    reject(err.toString());
+  });
+
+  process.on('exit', function() {
+    console.log('Done!');
+  });
+
+}
+
+loadProcess();  
+</code></pre>
+
+<p>Runnning:  </p>
+
+<pre><code>node index.js  
+</code></pre>
+
+<p>Will get us:  </p>
+
+<pre><code>Process  beginning.  
+Process complete.  
+Done!  
+</code></pre>
+
+<p><strong>Running Multiple Instances with Arguments</strong></p>
+
+<p>While our previous example is truly fascinating, let's pass some arguments to our child process and use promises so we can queue up a whole bunch.</p>
+
+<p>First we'll modify our index.js file to pass in arguments to our child processes.  The second parameter to <code>spawn</code> is an array that accepts any number of elements and makes them available to the child process via <code>process.argv</code> array.  Our <code>loadProcess</code> function will take in a parameter, <code>arg</code>, and will pass it to the child process via the spawn function as the second element in the arguments array.</p>
+
+<p>We'll also wrap the event listeners in a bluebird promise, and resolve the promise when the process is complete.</p>
+
+<pre><code>//index.js
+ function loadProcess(arg) {
+
+    return new bbPromise(function(resolve, reject) {
+      var process = spawn('node', ['./process.js', arg]);
+
+      process.stdout.on('data', function(data) {
+        console.log(data.toString());
+      });
+
+      process.stderr.on('data', function(err) {
+        reject(err.toString());
+      });
+
+      process.on('exit', function() {
+        resolve();
+      });
+    });
+  }
+</code></pre>
+
+<p>We'll make a slight modification to <code>process.js</code> so we can get access to the passed <code>arg</code> value.  All arguments passed into spawn will be available in the child process in the <code>process.argv</code> property.  This property is an array, and the first two elements will be the <code>'node'</code> command and the filepath respectively, so our value will be happily residing at <code>process.argv[2]</code>.</p>
+
+<pre><code>//process.js
+var value = process.argv[2];
+
+    process.stdout.write('Process ' + value + ' beginning.');
+
+    setTimeout(function(){
+        process.stdout.write('Process ' + value + ' complete.');
+    }, 2000);
+</code></pre>
+
+<p>Next, to make use of our promises, we'll queue up a whole bunch of the child process using different arguments.  Then, using <a href="http://bluebirdjs.com/docs/api/map.html">bluebird's map</a> function, we'll execute each process, and execute a function when they have all resolved.</p>
+
+<pre><code>// index.js
+...
+  var commands = [1, 2, 3, 4, 5].map(function(value) {
+    return loadProcess.bind(null, value);
+  });
+
+  return bbPromise.map(commands, function(command) {
+    return command();
+  })
+  .then(function() {
+    console.log('Child Processes Completed');
+  });
+</code></pre>
+
+<p>We create our commands array to be composed of function references to <code>loadProcess</code> bound to different argument values, in this case the numbers one through five.</p>
+
+<p>Then, bluebird's map function will iterate over each command, which are each promises remember, and execute that command. Then, it will console.log when they have all completed.</p>
+
+<p>Running  </p>
+
+<pre><code>node index.js  
+</code></pre>
+
+<p>Should get you something along the lines of  </p>
+
+<pre><code>Process 4 beginning.  
+Process 2 beginning.  
+Process 5 beginning.  
+Process 1 beginning.  
+Process 3 beginning.  
+Process 4 complete.  
+Process 2 complete.  
+Process 5 complete.  
+Process 1 complete.  
+Process 3 complete.  
+Child Processes Completed  
+</code></pre>
+
+<p><strong>Limiting the Number of Concurrent Processes</strong></p>
+
+<p>Up above, it's a bit of the wild west out there.  Processes are flying in any order and all running at the same time.  What if we needed to run them serially?  Or what if we needed to limit the total number going at one time?</p>
+
+<p>Bluebird's map function, simply enough, accepts a concurrency argument which will limit the total number of unresolved promises it will have running at any given time.</p>
+
+<pre><code>//index.js 
+...
+  return bbPromise.map(commands, function(command) {
+    return command();
+  }, {
+    concurrency: 1
+  })
+  .then(function() {
+    console.log('Child Processes Completed');
+  });
+</code></pre>
+
+<p>With a concurrency of one, running index.js will execute each process in order, and will only start after the previous has resolved.  Increasing the concurrency value, will start running that number of processes at the same time.  Try it out!</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Managing%20Multiple%20Child%20Processes%20in%20NodeJS&amp;url=http://localhost:2368/managing-multiple-child-processes-in-nodejs/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/managing-multiple-child-processes-in-nodejs/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/managing-multiple-child-processes-in-nodejs/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/">
+        <section class="post">
+            <h2>Spinning up a NodeJS Server from Scratch on Digital Ocean</h2>
+            <p>Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Lingua Franca</a> © 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=21ac6c8e80"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=21ac6c8e80"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=21ac6c8e80"></script> 
+
+</body>

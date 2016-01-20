@@ -1,4 +1,179 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Thu, 14 Jan 2016 04:03:25 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Spinning up a NodeJS Server from Scratch on Digital Ocean</title><description>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system&lt;/p&gt;</description><link>http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/</link><guid isPermaLink="false">62334f29-188f-45a6-944d-79ccac7c2737</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 08 Jan 2016 00:20:09 GMT</pubDate><content:encoded>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 20 Jan 2016 23:02:46 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Managing Multiple Child Processes in NodeJS</title><description>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate&lt;/p&gt;</description><link>http://localhost:2368/managing-multiple-child-processes-in-nodejs/</link><guid isPermaLink="false">baa6d50d-062b-4969-8363-24c400992b6b</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 20 Jan 2016 23:02:38 GMT</pubDate><content:encoded>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate child processes and then limiting the total concurrent number of processes running at any given time.&lt;/p&gt;
+
+&lt;p&gt;In this post, I'm going to go through the steps I came up with.  First, how to create a child process in a separate file and run it using the &lt;code&gt;spawn&lt;/code&gt; method.  Next, how to promisify the process and pass arguments to it.  Lastly, how to queue up a whole bunch of those processes and limiting the total number that will be run concurrently.&lt;/p&gt;
+
+&lt;p&gt;If you're just here for some sweet code, &lt;a href="https://github.com/alexzywiak/nodejs-childprocesses-bluebird"&gt;here's&lt;/a&gt; the repo with the example code.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Outsourcing a Child Process&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The only npm dependency we'll need is &lt;code&gt;bluebird&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm init  
+npm install --save bluebird  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our driver file will be in &lt;code&gt;index.js&lt;/code&gt; and we'll put our child process login in &lt;code&gt;process.js&lt;/code&gt;. &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;├── index.js
+├── node_modules
+├── package.json
+└── process.js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We'll use a trivial example for our child process logic.  It will run a &lt;code&gt;setTimeout&lt;/code&gt; function to simulate a delay.  It will send data to the parent process using &lt;a href="https://nodejs.org/api/process.html#process_process_stdout"&gt;process.stdout&lt;/a&gt;.  It will send some trivial data when it is initiated and again after two seconds when it is completed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// process.js
+
+    process.stdout.write('Process beginning.');
+
+    setTimeout(function(){
+        process.stdout.write('Process complete.');
+    }, 2000);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our &lt;code&gt;index.js&lt;/code&gt; file will use the &lt;a href="https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options"&gt;spawn&lt;/a&gt; function from Node's &lt;code&gt;child_process&lt;/code&gt; module to call &lt;code&gt;process.js&lt;/code&gt;.  Spawn needs to be passed in two parameters to run and external file.  The first is the command to run the file, in this case &lt;code&gt;node&lt;/code&gt;, and the second is an array of arguments, the first of which, will be the file path of the file we would like to run, in this case &lt;code&gt;'./process.js'&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Our child process is sending data through the &lt;code&gt;process.stdout.write()&lt;/code&gt; function, but we need to set up listeners in the parent process to get access to that data and simply write it to the console.  The data that comes back is in the form of a &lt;code&gt;buffer&lt;/code&gt; so we'll have to call buffer's &lt;code&gt;.toString&lt;/code&gt; method on it to convert into something comprehensible. &lt;/p&gt;
+
+&lt;p&gt;We'll set up listeners for three events on the child, a data event from &lt;code&gt;process.stdout&lt;/code&gt;, data in the case of an error from &lt;code&gt;process.stderr&lt;/code&gt; and finally, we'll listen for the &lt;code&gt;exit&lt;/code&gt; event on &lt;code&gt;process&lt;/code&gt;.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// index.js
+var spawn = require('child_process').spawn;  
+var bbPromise = require('bluebird');
+
+function loadProcess() {
+
+  var process = spawn('node', ['./process.js']);
+
+  process.stdout.on('data', function(data) {
+    console.log(data.toString());
+  });
+
+  process.stderr.on('data', function(err) {
+    reject(err.toString());
+  });
+
+  process.on('exit', function() {
+    console.log('Done!');
+  });
+
+}
+
+loadProcess();  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Runnning:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;node index.js  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Will get us:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Process  beginning.  
+Process complete.  
+Done!  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Running Multiple Instances with Arguments&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;While our previous example is truly fascinating, let's pass some arguments to our child process and use promises so we can queue up a whole bunch.&lt;/p&gt;
+
+&lt;p&gt;First we'll modify our index.js file to pass in arguments to our child processes.  The second parameter to &lt;code&gt;spawn&lt;/code&gt; is an array that accepts any number of elements and makes them available to the child process via &lt;code&gt;process.argv&lt;/code&gt; array.  Our &lt;code&gt;loadProcess&lt;/code&gt; function will take in a parameter, &lt;code&gt;arg&lt;/code&gt;, and will pass it to the child process via the spawn function as the second element in the arguments array.&lt;/p&gt;
+
+&lt;p&gt;We'll also wrap the event listeners in a bluebird promise, and resolve the promise when the process is complete.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;//index.js
+ function loadProcess(arg) {
+
+    return new bbPromise(function(resolve, reject) {
+      var process = spawn('node', ['./process.js', arg]);
+
+      process.stdout.on('data', function(data) {
+        console.log(data.toString());
+      });
+
+      process.stderr.on('data', function(err) {
+        reject(err.toString());
+      });
+
+      process.on('exit', function() {
+        resolve();
+      });
+    });
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We'll make a slight modification to &lt;code&gt;process.js&lt;/code&gt; so we can get access to the passed &lt;code&gt;arg&lt;/code&gt; value.  All arguments passed into spawn will be available in the child process in the &lt;code&gt;process.argv&lt;/code&gt; property.  This property is an array, and the first two elements will be the &lt;code&gt;'node'&lt;/code&gt; command and the filepath respectively, so our value will be happily residing at &lt;code&gt;process.argv[2]&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;//process.js
+var value = process.argv[2];
+
+    process.stdout.write('Process ' + value + ' beginning.');
+
+    setTimeout(function(){
+        process.stdout.write('Process ' + value + ' complete.');
+    }, 2000);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, to make use of our promises, we'll queue up a whole bunch of the child process using different arguments.  Then, using &lt;a href="http://bluebirdjs.com/docs/api/map.html"&gt;bluebird's map&lt;/a&gt; function, we'll execute each process, and execute a function when they have all resolved.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// index.js
+...
+  var commands = [1, 2, 3, 4, 5].map(function(value) {
+    return loadProcess.bind(null, value);
+  });
+
+  return bbPromise.map(commands, function(command) {
+    return command();
+  })
+  .then(function() {
+    console.log('Child Processes Completed');
+  });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We create our commands array to be composed of function references to &lt;code&gt;loadProcess&lt;/code&gt; bound to different argument values, in this case the numbers one through five.&lt;/p&gt;
+
+&lt;p&gt;Then, bluebird's map function will iterate over each command, which are each promises remember, and execute that command. Then, it will console.log when they have all completed.&lt;/p&gt;
+
+&lt;p&gt;Running  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;node index.js  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Should get you something along the lines of  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Process 4 beginning.  
+Process 2 beginning.  
+Process 5 beginning.  
+Process 1 beginning.  
+Process 3 beginning.  
+Process 4 complete.  
+Process 2 complete.  
+Process 5 complete.  
+Process 1 complete.  
+Process 3 complete.  
+Child Processes Completed  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Limiting the Number of Concurrent Processes&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Up above, it's a bit of the wild west out there.  Processes are flying in any order and all running at the same time.  What if we needed to run them serially?  Or what if we needed to limit the total number going at one time?&lt;/p&gt;
+
+&lt;p&gt;Bluebird's map function, simply enough, accepts a concurrency argument which will limit the total number of unresolved promises it will have running at any given time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;//index.js 
+...
+  return bbPromise.map(commands, function(command) {
+    return command();
+  }, {
+    concurrency: 1
+  })
+  .then(function() {
+    console.log('Child Processes Completed');
+  });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a concurrency of one, running index.js will execute each process in order, and will only start after the previous has resolved.  Increasing the concurrency value, will start running that number of processes at the same time.  Try it out!&lt;/p&gt;</content:encoded></item><item><title>Spinning up a NodeJS Server from Scratch on Digital Ocean</title><description>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system&lt;/p&gt;</description><link>http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/</link><guid isPermaLink="false">62334f29-188f-45a6-944d-79ccac7c2737</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 08 Jan 2016 00:20:09 GMT</pubDate><content:encoded>&lt;p&gt;Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server's file system where you can npm, grunt, and node to your heart's content.  It's a refreshingly transparent system after the rather opaque world of Heroku's Dyno's and build packs.&lt;/p&gt;
 
 &lt;p&gt;What I'll walk through here is setting up a Digital Ocean droplet, their clever euphemism for a server instance.  Once we have our droplet set up, we'll install the necessary NodeJS packages, install Git, and clone over a repository.  Once we have that going, we'll briefly go through how to set up your DNS to point to your droplet and how to get the server to respond appropriately to traffic.&lt;/p&gt;
 
