@@ -23,7 +23,7 @@
     <meta property="og:description" content="In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments....">
     <meta property="og:url" content="http://localhost:2368/managing-multiple-child-processes-in-nodejs/">
     <meta property="article:published_time" content="2016-01-20T23:02:38.316Z">
-    <meta property="article:modified_time" content="2016-01-22T21:17:55.707Z">
+    <meta property="article:modified_time" content="2016-01-22T21:19:01.995Z">
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Managing Multiple Child Processes in NodeJS">
@@ -45,7 +45,7 @@
     "headline": "Managing Multiple Child Processes in NodeJS",
     "url": "http://localhost:2368/managing-multiple-child-processes-in-nodejs/",
     "datePublished": "2016-01-20T23:02:38.316Z",
-    "dateModified": "2016-01-22T21:17:55.707Z",
+    "dateModified": "2016-01-22T21:19:01.995Z",
     "description": "In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments...."
 }
     </script>
@@ -175,7 +175,7 @@ Done!
 
 <p>We'll also wrap the event listeners in a bluebird promise, and resolve the promise when the process is complete.</p>
 
-<pre><code>//index.js
+<pre><code class="language-javascript">//index.js
  function loadProcess(arg) {
 
     return new bbPromise(function(resolve, reject) {
@@ -198,7 +198,7 @@ Done!
 
 <p>We'll make a slight modification to <code>process.js</code> so we can get access to the passed <code>arg</code> value.  All arguments passed into spawn will be available in the child process in the <code>process.argv</code> property.  This property is an array, and the first two elements will be the <code>'node'</code> command and the filepath respectively, so our value will be happily residing at <code>process.argv[2]</code>.</p>
 
-<pre><code>//process.js
+<pre><code class="language-javascript">//process.js
 var value = process.argv[2];
 
     process.stdout.write('Process ' + value + ' beginning.');
@@ -210,7 +210,7 @@ var value = process.argv[2];
 
 <p>Next, to make use of our promises, we'll queue up a whole bunch of the child process using different arguments.  Then, using <a href="http://bluebirdjs.com/docs/api/map.html">bluebird's map</a> function, we'll execute each process, and execute a function when they have all resolved.</p>
 
-<pre><code>// index.js
+<pre><code class="language-javascript">// index.js
 ...
   var commands = [1, 2, 3, 4, 5].map(function(value) {
     return loadProcess.bind(null, value);
@@ -254,7 +254,7 @@ Child Processes Completed
 
 <p>Bluebird's map function, simply enough, accepts a concurrency argument which will limit the total number of unresolved promises it will have running at any given time.</p>
 
-<pre><code>//index.js 
+<pre><code class="language-javascript">//index.js 
 ...
   return bbPromise.map(commands, function(command) {
     return command();

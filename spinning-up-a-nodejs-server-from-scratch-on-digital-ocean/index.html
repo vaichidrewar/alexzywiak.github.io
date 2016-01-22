@@ -24,7 +24,7 @@
     <meta property="og:description" content="Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server&#x27;s file system where you can npm, grunt, and..." />
     <meta property="og:url" content="http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/" />
     <meta property="article:published_time" content="2016-01-08T00:20:09.094Z" />
-    <meta property="article:modified_time" content="2016-01-14T03:38:16.554Z" />
+    <meta property="article:modified_time" content="2016-01-22T21:20:40.846Z" />
     
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Spinning up a NodeJS Server from Scratch on Digital Ocean" />
@@ -46,7 +46,7 @@
     "headline": "Spinning up a NodeJS Server from Scratch on Digital Ocean",
     "url": "http://localhost:2368/spinning-up-a-nodejs-server-from-scratch-on-digital-ocean/",
     "datePublished": "2016-01-08T00:20:09.094Z",
-    "dateModified": "2016-01-14T03:38:16.554Z",
+    "dateModified": "2016-01-22T21:20:40.846Z",
     "description": "Digital Ocean takes a little more set up than Heroku, but once you get it going, it is blissfully easy to use.  DO gives you access to a CLI on your server&#x27;s file system where you can npm, grunt, and..."
 }
     </script>
@@ -118,13 +118,14 @@
 
 <p>This will print out the public SSH key, which you can then paste into the text area in the Security page.  Give the key a name, and save it.</p>
 
-<p>At this point, go ahead and hit 'Create a Droplet`.  Get it to run on Ubuntu, the default, and choose your size and location.  Make sure to <strong>add the SSH key you just created</strong> in the 'Add Your SSH Keys' section!</p>
+<p>At this point, go ahead and hit 'Create a Droplet'.  Get it to run on Ubuntu, the default, and choose your size and location.  Make sure to <strong>add the SSH key you just created</strong> in the 'Add Your SSH Keys' section!</p>
 
 <p><strong>Set up Your Environment</strong></p>
 
 <p>The droplet is up a running at this point, let's get it to do its job.  In the droplet menu, copy the IP address of your new droplet.  Then open up your terminal, and type the following.</p>
 
-<p><code>ssh root@YOUR DROPLET IP</code></p>
+<pre><code>ssh root@YOUR DROPLET IP  
+</code></pre>
 
 <p>Tell it 'yes', and you're in!</p>
 
@@ -132,11 +133,13 @@
 
 <p>First off run:</p>
 
-<p><code>apt-get update</code></p>
+<pre><code>apt-get update  
+</code></pre>
 
 <p>Then install some essentials:</p>
 
-<p><code>apt-get install nodejs npm git</code></p>
+<pre><code>apt-get install nodejs npm git  
+</code></pre>
 
 <p>Then it's as simple as running <code>git clone &lt;your repo URL of choice&gt;</code> in your droplet.  Once in there, an <code>npm install</code> will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm and build away.</p>
 
@@ -146,11 +149,13 @@
 
 <p>To run the node server on the droplet, we'll use PM2 as a process manager.  </p>
 
-<p><code>apt-get install pm2</code></p>
+<pre><code>apt-get install pm2  
+</code></pre>
 
 <p>pm2 will be responsible for handling our <strong>app server</strong> on our droplet. Run pm2 start to get things going.</p>
 
-<p><code>pm2 start &lt;server file&gt;</code></p>
+<pre><code>pm2 start &lt;server file&gt;  
+</code></pre>
 
 <p>At this point, if you visit your droplet's IP:&lt; port #> in your browser, you should see your app up and running.</p>
 
@@ -162,30 +167,31 @@
 
 <p>Essentially, nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using <code>apt-get</code>, and then will set up a config file to route incoming requests to the proper IP.</p>
 
-<p><code>apt-get install nginx</code></p>
+<pre><code>apt-get install nginx  
+</code></pre>
 
 <p>Then to get at the config file we need:</p>
 
-<p><code>vi /etc/nginx/sites-available/default</code></p>
+<pre><code>vi /etc/nginx/sites-available/default  
+</code></pre>
 
 <p>And then, as per the Digital Ocean tutorial, replace the contents of that file with the following:</p>
 
-<p>{
-    listen 80;</p>
+<pre><code> {
+    listen 80;
 
-<pre><code>server_name example.com;
+    server_name example.com;
 
-location / {
-    proxy_pass http://APP_PRIVATE_IP_ADDRESS:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_cache_bypass $http_upgrade;
+    location / {
+        proxy_pass http://APP_PRIVATE_IP_ADDRESS:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
 }
 </code></pre>
-
-<p>}</p>
 
 <p><strong>Set up DNS</strong></p>
 
@@ -193,9 +199,10 @@ location / {
 
 <p>Once you have that the app and web servers up and running on your droplet, its a matter of setting up your DNS to point to it. First head on over to the service that manages your domain name, goDaddy etc., and point the nameservers associated with your domain name to:</p>
 
-<p>NS1.DIGITALOCEAN.COM <br />
-NS2.DIGITALOCEAN.COM <br />
-NS3.DIGITALOCEAN.COM</p>
+<pre><code>NS1.DIGITALOCEAN.COM  
+NS2.DIGITALOCEAN.COM  
+NS3.DIGITALOCEAN.COM  
+</code></pre>
 
 <p>Next, in your Digital Ocean Dashboard, navigate to the Networking > Domain menu.  While there, in the appropriate fields, fill in your domain name and your droplet of choice and hit 'Create Record'.  </p>
 

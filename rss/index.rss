@@ -1,4 +1,4 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Fri, 22 Jan 2016 21:18:02 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Managing Multiple Child Processes in NodeJS</title><description>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate&lt;/p&gt;</description><link>http://localhost:2368/managing-multiple-child-processes-in-nodejs/</link><guid isPermaLink="false">baa6d50d-062b-4969-8363-24c400992b6b</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 20 Jan 2016 23:02:38 GMT</pubDate><content:encoded>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate child processes and then limiting the total concurrent number of processes running at any given time.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Fri, 22 Jan 2016 21:20:45 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Managing Multiple Child Processes in NodeJS</title><description>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate&lt;/p&gt;</description><link>http://localhost:2368/managing-multiple-child-processes-in-nodejs/</link><guid isPermaLink="false">baa6d50d-062b-4969-8363-24c400992b6b</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 20 Jan 2016 23:02:38 GMT</pubDate><content:encoded>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate child processes and then limiting the total concurrent number of processes running at any given time.&lt;/p&gt;
 
 &lt;p&gt;In this post, I'm going to go through the steps I came up with.  First, how to create a child process in a separate file and run it using the &lt;code&gt;spawn&lt;/code&gt; method.  Next, how to promisify the process and pass arguments to it.  Lastly, how to queue up a whole bunch of those processes and limiting the total number that will be run concurrently.&lt;/p&gt;
 
@@ -82,7 +82,7 @@ Done!
 
 &lt;p&gt;We'll also wrap the event listeners in a bluebird promise, and resolve the promise when the process is complete.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;//index.js
+&lt;pre&gt;&lt;code class="language-javascript"&gt;//index.js
  function loadProcess(arg) {
 
     return new bbPromise(function(resolve, reject) {
@@ -105,7 +105,7 @@ Done!
 
 &lt;p&gt;We'll make a slight modification to &lt;code&gt;process.js&lt;/code&gt; so we can get access to the passed &lt;code&gt;arg&lt;/code&gt; value.  All arguments passed into spawn will be available in the child process in the &lt;code&gt;process.argv&lt;/code&gt; property.  This property is an array, and the first two elements will be the &lt;code&gt;'node'&lt;/code&gt; command and the filepath respectively, so our value will be happily residing at &lt;code&gt;process.argv[2]&lt;/code&gt;.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;//process.js
+&lt;pre&gt;&lt;code class="language-javascript"&gt;//process.js
 var value = process.argv[2];
 
     process.stdout.write('Process ' + value + ' beginning.');
@@ -117,7 +117,7 @@ var value = process.argv[2];
 
 &lt;p&gt;Next, to make use of our promises, we'll queue up a whole bunch of the child process using different arguments.  Then, using &lt;a href="http://bluebirdjs.com/docs/api/map.html"&gt;bluebird's map&lt;/a&gt; function, we'll execute each process, and execute a function when they have all resolved.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;// index.js
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// index.js
 ...
   var commands = [1, 2, 3, 4, 5].map(function(value) {
     return loadProcess.bind(null, value);
@@ -161,7 +161,7 @@ Child Processes Completed
 
 &lt;p&gt;Bluebird's map function, simply enough, accepts a concurrency argument which will limit the total number of unresolved promises it will have running at any given time.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;//index.js 
+&lt;pre&gt;&lt;code class="language-javascript"&gt;//index.js 
 ...
   return bbPromise.map(commands, function(command) {
     return command();
@@ -199,13 +199,14 @@ Child Processes Completed
 
 &lt;p&gt;This will print out the public SSH key, which you can then paste into the text area in the Security page.  Give the key a name, and save it.&lt;/p&gt;
 
-&lt;p&gt;At this point, go ahead and hit 'Create a Droplet`.  Get it to run on Ubuntu, the default, and choose your size and location.  Make sure to &lt;strong&gt;add the SSH key you just created&lt;/strong&gt; in the 'Add Your SSH Keys' section!&lt;/p&gt;
+&lt;p&gt;At this point, go ahead and hit 'Create a Droplet'.  Get it to run on Ubuntu, the default, and choose your size and location.  Make sure to &lt;strong&gt;add the SSH key you just created&lt;/strong&gt; in the 'Add Your SSH Keys' section!&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set up Your Environment&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;The droplet is up a running at this point, let's get it to do its job.  In the droplet menu, copy the IP address of your new droplet.  Then open up your terminal, and type the following.&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;ssh root@YOUR DROPLET IP&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;ssh root@YOUR DROPLET IP  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Tell it 'yes', and you're in!&lt;/p&gt;
 
@@ -213,11 +214,13 @@ Child Processes Completed
 
 &lt;p&gt;First off run:&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;apt-get update&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;apt-get update  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Then install some essentials:&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;apt-get install nodejs npm git&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;apt-get install nodejs npm git  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Then it's as simple as running &lt;code&gt;git clone &amp;lt;your repo URL of choice&amp;gt;&lt;/code&gt; in your droplet.  Once in there, an &lt;code&gt;npm install&lt;/code&gt; will get all your packages going.  If you need grunt or gulp, just install their cli tools through npm and build away.&lt;/p&gt;
 
@@ -227,11 +230,13 @@ Child Processes Completed
 
 &lt;p&gt;To run the node server on the droplet, we'll use PM2 as a process manager.  &lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;apt-get install pm2&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;apt-get install pm2  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;pm2 will be responsible for handling our &lt;strong&gt;app server&lt;/strong&gt; on our droplet. Run pm2 start to get things going.&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;pm2 start &amp;lt;server file&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;pm2 start &amp;lt;server file&amp;gt;  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;At this point, if you visit your droplet's IP:&amp;lt; port #&gt; in your browser, you should see your app up and running.&lt;/p&gt;
 
@@ -243,30 +248,31 @@ Child Processes Completed
 
 &lt;p&gt;Essentially, nginx will tell any incoming requests to our DNS which IP to go look at.  First, we'll install it using &lt;code&gt;apt-get&lt;/code&gt;, and then will set up a config file to route incoming requests to the proper IP.&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;apt-get install nginx&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;apt-get install nginx  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Then to get at the config file we need:&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;vi /etc/nginx/sites-available/default&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vi /etc/nginx/sites-available/default  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;And then, as per the Digital Ocean tutorial, replace the contents of that file with the following:&lt;/p&gt;
 
-&lt;p&gt;{
-    listen 80;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; {
+    listen 80;
 
-&lt;pre&gt;&lt;code&gt;server_name example.com;
+    server_name example.com;
 
-location / {
-    proxy_pass http://APP_PRIVATE_IP_ADDRESS:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_cache_bypass $http_upgrade;
+    location / {
+        proxy_pass http://APP_PRIVATE_IP_ADDRESS:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
 }
 &lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;}&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Set up DNS&lt;/strong&gt;&lt;/p&gt;
 
@@ -274,9 +280,10 @@ location / {
 
 &lt;p&gt;Once you have that the app and web servers up and running on your droplet, its a matter of setting up your DNS to point to it. First head on over to the service that manages your domain name, goDaddy etc., and point the nameservers associated with your domain name to:&lt;/p&gt;
 
-&lt;p&gt;NS1.DIGITALOCEAN.COM &lt;br&gt;
-NS2.DIGITALOCEAN.COM &lt;br&gt;
-NS3.DIGITALOCEAN.COM&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;NS1.DIGITALOCEAN.COM  
+NS2.DIGITALOCEAN.COM  
+NS3.DIGITALOCEAN.COM  
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Next, in your Digital Ocean Dashboard, navigate to the Networking &gt; Domain menu.  While there, in the appropriate fields, fill in your domain name and your droplet of choice and hit 'Create Record'.  &lt;/p&gt;
 
