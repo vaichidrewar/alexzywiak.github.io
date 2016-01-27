@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>Streaming Files from S3 Using AWS Cloudfront</title>
+    <meta name="description" content="" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=34d86ea5bb" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=34d86ea5bb" />
+    <link rel="canonical" href="index.html" />
+    <meta name="referrer" content="origin" />
+    
+    <meta property="og:site_name" content="Lingua Franca" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Streaming Files from S3 Using AWS Cloudfront" />
+    <meta property="og:description" content="For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted..." />
+    <meta property="og:url" content="http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/" />
+    <meta property="article:published_time" content="2016-01-27T22:25:15.528Z" />
+    <meta property="article:modified_time" content="2016-01-27T22:25:15.527Z" />
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Streaming Files from S3 Using AWS Cloudfront" />
+    <meta name="twitter:description" content="For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted..." />
+    <meta name="twitter:url" content="http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Streaming Files from S3 Using AWS Cloudfront",
+    "url": "http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/",
+    "datePublished": "2016-01-27T22:25:15.528Z",
+    "dateModified": "2016-01-27T22:25:15.527Z",
+    "description": "For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7" />
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html" />
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../index.html">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.html">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Streaming Files from S3 Using AWS Cloudfront</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-01-27">27 January 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation <a href="http://alexzywiak.github.io/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/">here</a>.</p>
+
+<p>And then totally disregard that.  Very soon afterward, I discovered AWS Cloudfront which offers a much better way to host and stream files.  Cloudfront lets you associate a distribution with an existing S3 bucket and make select files streamable or generally available.</p>
+
+<p>I'll briefly go through here how to start make S3 hosted audio files available for streaming on a client.</p>
+
+<p><strong>Link to S3</strong></p>
+
+<p>Assuming you have a bucket up and running on S3 with some files you want to make available, head on over to the <a href="https://console.aws.amazon.com/cloudfront/home">Cloudfront Dashboard</a>.  </p>
+
+<p>Click <code>Create Distribution</code> <br />
+Then choose <code>Web</code></p>
+
+<p>On the next screen set the <code>Origin Domain Name</code> to the bucket you want to set up the distribution for.  Optionally, add in an <code>Origin Path</code> to specify a folder in the bucket to use as the default origin.</p>
+
+<p>Click <code>Create Disrtibution</code> down at the bottom, and it will get up and running.</p>
+
+<p>Back in your dashboard, you should see the new distribution along with some information about it.</p>
+
+<p><strong>Setting Up Permissions on your Bucket</strong></p>
+
+<p>to make the files available for streaming, you have to make them 'public' in your bucket.  There are a few ways to do this depending on what you're hosting.</p>
+
+<p>1)  You can simply right click on any files in your bucket and choose <code>Make Public</code></p>
+
+<p>2)  You can right click on a folder and choose <code>Make Public</code>.  This will grant access to all files currently in the folder, but new files added into the folder will not be made public by default.</p>
+
+<p>3)  Probably your best bet, is to set up a bucket policy.  These set up global permission defaults for your bucket and give you a lot of fine grained control over what you want to share, and with whom.  </p>
+
+<p>To edit a bucket policy, right click your bucket and choose <code>Properties</code>. <br />
+Click <code>Permissions</code> --> <code>Add bucket policy</code>.</p>
+
+<p>Here are some <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html">example bucket policies</a> from Amazon/  Copy, paste, modify, and save as your new bucket policy.  </p>
+
+<p>Here's a basic boilerplate to allow users to stream files from your bucket.  It will let users get access to any <code>.wav</code> files in your <code>public</code> folder in the specified bucket.</p>
+
+<pre><code>{
+  "Version":"2012-10-17",
+  "Statement":[
+    {
+      "Sid":"AddPerm",
+      "Effect":"Allow",
+      "Principal": "*",
+      "Action":["s3:GetObject"],
+      "Resource":["arn:aws:s3:::examplebucket/public/*.wav"]
+    }
+  ]
+}
+</code></pre>
+
+<p><strong>Accessing Files on the Client</strong></p>
+
+<p>Once your new Cloudfront distribution is in an Enabled state and you have updated your bucket permissions, you can access your files through the client.</p>
+
+<p>Back in the Cloudfront dashboard, grab the <code>Domain Name</code> for your distribution, then append the S3 folder path and filename of a file to stream.  </p>
+
+<p>For example, to get at <code>test.wav</code> in the <code>public</code> folder:</p>
+
+<pre><code>&lt; what ever cloud front string &gt;.cloudfront.net/public/test.wav  
+</code></pre>
+
+<p>Put that into your browser and you should be able to stream your file.</p>
+
+<p>Like wise, to make it available on an html page add it as the source to an audio tag, and you're good to go!</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/index.html">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/index.html">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Streaming%20Files%20from%20S3%20Using%20AWS%20Cloudfront&amp;url=http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../managing-multiple-child-processes-in-nodejs/index.html">
+        <section class="post">
+            <h2>Managing Multiple Child Processes in NodeJS</h2>
+            <p>In a recent project, I needed to run some audio processing functions on a serious amount of audio files.&hellip;</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../index.html">Lingua Franca</a> &copy; 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=34d86ea5bb"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=34d86ea5bb"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=34d86ea5bb"></script> 
+
+</body>
+</html>

@@ -1,4 +1,67 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Fri, 22 Jan 2016 21:20:45 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Managing Multiple Child Processes in NodeJS</title><description>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate&lt;/p&gt;</description><link>http://localhost:2368/managing-multiple-child-processes-in-nodejs/</link><guid isPermaLink="false">baa6d50d-062b-4969-8363-24c400992b6b</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 20 Jan 2016 23:02:38 GMT</pubDate><content:encoded>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate child processes and then limiting the total concurrent number of processes running at any given time.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 27 Jan 2016 22:25:25 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Streaming Files from S3 Using AWS Cloudfront</title><description>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation&lt;/p&gt;</description><link>http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/</link><guid isPermaLink="false">93e58cd9-3a03-486c-8b74-607695e4b098</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 27 Jan 2016 22:25:15 GMT</pubDate><content:encoded>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation &lt;a href="http://alexzywiak.github.io/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;And then totally disregard that.  Very soon afterward, I discovered AWS Cloudfront which offers a much better way to host and stream files.  Cloudfront lets you associate a distribution with an existing S3 bucket and make select files streamable or generally available.&lt;/p&gt;
+
+&lt;p&gt;I'll briefly go through here how to start make S3 hosted audio files available for streaming on a client.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Link to S3&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Assuming you have a bucket up and running on S3 with some files you want to make available, head on over to the &lt;a href="https://console.aws.amazon.com/cloudfront/home"&gt;Cloudfront Dashboard&lt;/a&gt;.  &lt;/p&gt;
+
+&lt;p&gt;Click &lt;code&gt;Create Distribution&lt;/code&gt; &lt;br&gt;
+Then choose &lt;code&gt;Web&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;On the next screen set the &lt;code&gt;Origin Domain Name&lt;/code&gt; to the bucket you want to set up the distribution for.  Optionally, add in an &lt;code&gt;Origin Path&lt;/code&gt; to specify a folder in the bucket to use as the default origin.&lt;/p&gt;
+
+&lt;p&gt;Click &lt;code&gt;Create Disrtibution&lt;/code&gt; down at the bottom, and it will get up and running.&lt;/p&gt;
+
+&lt;p&gt;Back in your dashboard, you should see the new distribution along with some information about it.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Setting Up Permissions on your Bucket&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;to make the files available for streaming, you have to make them 'public' in your bucket.  There are a few ways to do this depending on what you're hosting.&lt;/p&gt;
+
+&lt;p&gt;1)  You can simply right click on any files in your bucket and choose &lt;code&gt;Make Public&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;2)  You can right click on a folder and choose &lt;code&gt;Make Public&lt;/code&gt;.  This will grant access to all files currently in the folder, but new files added into the folder will not be made public by default.&lt;/p&gt;
+
+&lt;p&gt;3)  Probably your best bet, is to set up a bucket policy.  These set up global permission defaults for your bucket and give you a lot of fine grained control over what you want to share, and with whom.  &lt;/p&gt;
+
+&lt;p&gt;To edit a bucket policy, right click your bucket and choose &lt;code&gt;Properties&lt;/code&gt;. &lt;br&gt;
+Click &lt;code&gt;Permissions&lt;/code&gt; --&gt; &lt;code&gt;Add bucket policy&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here are some &lt;a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html"&gt;example bucket policies&lt;/a&gt; from Amazon/  Copy, paste, modify, and save as your new bucket policy.  &lt;/p&gt;
+
+&lt;p&gt;Here's a basic boilerplate to allow users to stream files from your bucket.  It will let users get access to any &lt;code&gt;.wav&lt;/code&gt; files in your &lt;code&gt;public&lt;/code&gt; folder in the specified bucket.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+  "Version":"2012-10-17",
+  "Statement":[
+    {
+      "Sid":"AddPerm",
+      "Effect":"Allow",
+      "Principal": "*",
+      "Action":["s3:GetObject"],
+      "Resource":["arn:aws:s3:::examplebucket/public/*.wav"]
+    }
+  ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Accessing Files on the Client&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Once your new Cloudfront distribution is in an Enabled state and you have updated your bucket permissions, you can access your files through the client.&lt;/p&gt;
+
+&lt;p&gt;Back in the Cloudfront dashboard, grab the &lt;code&gt;Domain Name&lt;/code&gt; for your distribution, then append the S3 folder path and filename of a file to stream.  &lt;/p&gt;
+
+&lt;p&gt;For example, to get at &lt;code&gt;test.wav&lt;/code&gt; in the &lt;code&gt;public&lt;/code&gt; folder:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt; what ever cloud front string &amp;gt;.cloudfront.net/public/test.wav  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Put that into your browser and you should be able to stream your file.&lt;/p&gt;
+
+&lt;p&gt;Like wise, to make it available on an html page add it as the source to an audio tag, and you're good to go!&lt;/p&gt;</content:encoded></item><item><title>Managing Multiple Child Processes in NodeJS</title><description>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate&lt;/p&gt;</description><link>http://localhost:2368/managing-multiple-child-processes-in-nodejs/</link><guid isPermaLink="false">baa6d50d-062b-4969-8363-24c400992b6b</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 20 Jan 2016 23:02:38 GMT</pubDate><content:encoded>&lt;p&gt;In a recent project, I needed to run some audio processing functions on a serious amount of audio files.  As we were running on a small time server, this was a little too taxing for our intro level RAM allotments.  So I looked into outsourcing the heavy lifting into separate child processes and then limiting the total concurrent number of processes running at any given time.&lt;/p&gt;
 
 &lt;p&gt;In this post, I'm going to go through the steps I came up with.  First, how to create a child process in a separate file and run it using the &lt;code&gt;spawn&lt;/code&gt; method.  Next, how to promisify the process and pass arguments to it.  Lastly, how to queue up a whole bunch of those processes and limiting the total number that will be run concurrently.&lt;/p&gt;
 
