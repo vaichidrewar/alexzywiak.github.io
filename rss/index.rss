@@ -1,4 +1,4 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 27 Jan 2016 22:25:25 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Streaming Files from S3 Using AWS Cloudfront</title><description>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation&lt;/p&gt;</description><link>http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/</link><guid isPermaLink="false">93e58cd9-3a03-486c-8b74-607695e4b098</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 27 Jan 2016 22:25:15 GMT</pubDate><content:encoded>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation &lt;a href="http://alexzywiak.github.io/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 27 Jan 2016 23:26:07 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Streaming Files from S3 Using AWS Cloudfront</title><description>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation&lt;/p&gt;</description><link>http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/</link><guid isPermaLink="false">93e58cd9-3a03-486c-8b74-607695e4b098</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 27 Jan 2016 22:25:15 GMT</pubDate><content:encoded>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation &lt;a href="http://alexzywiak.github.io/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;And then totally disregard that.  Very soon afterward, I discovered AWS Cloudfront which offers a much better way to host and stream files.  Cloudfront lets you associate a distribution with an existing S3 bucket and make select files streamable or generally available.&lt;/p&gt;
 
@@ -1745,11 +1745,11 @@ getDrunk(drinkBeerBarney); ===&amp;gt; "Mmmm Barney likes Duff!"...x6
 Set it equal to the number of spaces per tab. &lt;br&gt;
 Default value is 4.&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;"translateTabsToSpaces":true/false&lt;/code&gt; &lt;br&gt;
+&lt;p&gt;&lt;code&gt;"translate_tabs_to_spaces":true/false&lt;/code&gt;
 If true, all tab keypresses will be recorded as the number of spaces specified in "tab_size" instead of a tab character.  Visually, the tab key will function the same, but there will be no tab characters whatsoever. &lt;br&gt;
 Default value is false.&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;"useTabStops":true/false&lt;/code&gt; &lt;br&gt;
+&lt;p&gt;&lt;code&gt;"use_tab_stops":true/false&lt;/code&gt;
 If true, will set tab and backspace to add/delete up to the closest tab stop regardless of whether it's a tab character or a series of spaces. &lt;br&gt;
 Defaults to true.&lt;/p&gt;
 
@@ -1757,6 +1757,6 @@ Defaults to true.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;{
   "tab_size":2,
-  "translateTabsToSpaces":true,
-  "useTabStops":true
+  "translate_tabs_to_spaces":true,
+  "use_tab_stops":true
 }&lt;/code&gt;&lt;/pre&gt;</content:encoded></item></channel></rss>
