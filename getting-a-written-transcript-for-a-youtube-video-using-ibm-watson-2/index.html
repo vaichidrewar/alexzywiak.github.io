@@ -11,9 +11,9 @@
 
     <link rel="shortcut icon" href="../favicon.ico">
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=76be44b001">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=61645634b6">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
-		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=76be44b001">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=61645634b6">
     <link rel="canonical" href="index.html">
     <meta name="referrer" content="origin">
     
@@ -23,7 +23,7 @@
     <meta property="og:description" content="I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript. If you're the impatient type, here's the...">
     <meta property="og:url" content="http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/">
     <meta property="article:published_time" content="2015-12-10T02:41:10.342Z">
-    <meta property="article:modified_time" content="2015-12-10T16:43:53.431Z">
+    <meta property="article:modified_time" content="2016-01-29T17:04:08.444Z">
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Getting a Written Transcript for a Youtube Video Using IBM Watson">
@@ -45,7 +45,7 @@
     "headline": "Getting a Written Transcript for a Youtube Video Using IBM Watson",
     "url": "http://localhost:2368/getting-a-written-transcript-for-a-youtube-video-using-ibm-watson-2/",
     "datePublished": "2015-12-10T02:41:10.342Z",
-    "dateModified": "2015-12-10T16:43:53.431Z",
+    "dateModified": "2016-01-29T17:04:08.444Z",
     "description": "I will go through a quick script that will download audio from a Youtube video and then send it off to the IBM Watson speech to text service to get a written transcript. If you&#x27;re the impatient type, here&#x27;s the..."
 }
     </script>
@@ -203,8 +203,8 @@ var path = require('path');
 var Promise = require('bluebird');
 
 var speech_to_text = watson.speech_to_text({  
-  username: '505575e5-324c-45f6-b22e-751a23d6680d',
-  password: 'UfEnWMLWZCuz',
+  username: &lt;bluemix username&gt;,
+  password: &lt;bluemix password&gt;,
   version: 'v1',
   url: 'https://stream.watsonplatform.net/speech-to-text/api',
 });
@@ -345,8 +345,8 @@ if(flags[0] === 'transcribe'){
     
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=76be44b001"></script>
-    <script type="text/javascript" src="../assets/js/index.js?v=76be44b001"></script>
-    <script type="text/javascript" src="../assets/js/prism.js?v=76be44b001"></script> 
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=61645634b6"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=61645634b6"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=61645634b6"></script> 
 
 </body>
