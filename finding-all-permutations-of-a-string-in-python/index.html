@@ -1,0 +1,270 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Finding All Permutations of a String in Python</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=a6384e568a">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+		<link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=a6384e568a">
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="origin">
+    
+    <meta property="og:site_name" content="Lingua Franca">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Finding All Permutations of a String in Python">
+    <meta property="og:description" content="In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string. To lay it out:   # Given string 'ab' # Permutation list ['a', 'ab', 'b', 'ba'] This is...">
+    <meta property="og:url" content="http://localhost:2368/finding-all-permutations-of-a-string-in-python/">
+    <meta property="article:published_time" content="2016-02-01T21:42:19.470Z">
+    <meta property="article:modified_time" content="2016-02-01T21:42:19.469Z">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Finding All Permutations of a String in Python">
+    <meta name="twitter:description" content="In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string. To lay it out:   # Given string 'ab' # Permutation list ['a', 'ab', 'b', 'ba'] This is...">
+    <meta name="twitter:url" content="http://localhost:2368/finding-all-permutations-of-a-string-in-python/">
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Finding All Permutations of a String in Python",
+    "url": "http://localhost:2368/finding-all-permutations-of-a-string-in-python/",
+    "datePublished": "2016-02-01T21:42:19.470Z",
+    "dateModified": "2016-02-01T21:42:19.469Z",
+    "description": "In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string. To lay it out:   # Given string &#x27;ab&#x27; # Permutation list [&#x27;a&#x27;, &#x27;ab&#x27;, &#x27;b&#x27;, &#x27;ba&#x27;] This is..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7">
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html">
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Finding All Permutations of a String in Python</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-02-01">01 February 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string.</p>
+
+<p>To lay it out:  </p>
+
+<pre><code class="language-python"># Given string 'ab'
+# Permutation list ['a', 'ab', 'b', 'ba']
+</code></pre>
+
+<p>This is a poster child for recursion.  To set it up, we'll have our primary function, <code>string_permutations</code>, but also define a <code>subroutine</code> that will do our recursive dirt work.  We'll also create a <code>combos</code> list to hold onto our permutations.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python -tt
+
+def string_permutations(string):
+
+  def sub_routine(...some args):
+    combos = []
+    return combos
+
+  return sub_routine(...some args)
+
+def main():  
+  # print string_permutations('ab')
+
+if __name__ == "__main__":  
+  main()
+</code></pre>
+
+<p>We'll pass in two list arguments to <code>sub_routine</code>.  The first will hold on to all the characters that we have 'used' so far, and the other will hold on to the characters that we still have left to use.  We can call <code>sub_routine</code> in our parent function beginning with an empty list for 'used' characters, and a list made of all characters in the target string as the initial 'left' characters.</p>
+
+<pre><code class="language-python">...
+def sub_routine(used, left):  
+  combos = []
+  return combos
+
+return sub_routine([], list(string))  
+</code></pre>
+
+<p>Inside our <code>sub_routine</code> function, we can begin generating our permutations. First, we'll loop through each index in the <code>left</code> list.  Looping the index and not the character itself, will make it easier to manage the recursion later on.  Then, we'll remove the character from the <code>left</code> list at that index and add it to the end of the <code>used</code> list.</p>
+
+<p>The <code>used</code> list will represent our permutation so far.  We're not implementing restrictions on the size of the permutations, so each iteration will represent a unique permutation.  We can then push that permutation to our <code>combos</code> list.</p>
+
+<pre><code class="language-python">...
+def sub_routine(used, left):  
+  combos = []
+
+  for i in range(0, len(left)):
+    ch = left.pop(i)
+    used.append(ch)
+
+    combos.append(''.join(used))
+
+
+  return combos
+
+return sub_routine([], list(string))  
+</code></pre>
+
+<p>And now, here comes the fun part.  For each permutation we start building, we need to add on all combinations of remaining characters.  So let's get a little recursive.</p>
+
+<p>What we'll do is pass in the new <code>used</code> and <code>left</code> lists to a recursive call to our <code>sub_routine</code>.  Since our <code>sub_routine</code> will return all of its subsequent permutations, we can concatenate the result of our recursive call with our <code>combos</code> array.</p>
+
+<p>The tricky part comes in after we make the recursive call.  We have to reset the contents of left and used so that when we continue on in the for loop, we can access the next character properly.</p>
+
+<p>For example, on the first iteration of 'ab':  </p>
+
+<pre><code class="language-python"># First iteration: 
+# ch will equal 'a'
+# We will put 'a' into our used array as the first character.
+# All subsequent recursive calls down this path will have 'a' as the first character.
+# We finish the recursive chain, and replace 'a' in left and remove 'a' from used.
+
+
+#Second Iteration:
+# ch will equal 'b'
+# We will put 'b' into our used array as the first character.
+# All subsequent recursive calls down this path will have 'b' as the first character.
+</code></pre>
+
+<p>All of these steps will be repeated as part of the recursion with the result that each permutation will be visited.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python -tt
+
+def string_permutations(string):
+
+  def sub_routine(used, left):
+
+    combos = []
+
+    for i in range(0, len(left)):
+      ch = left.pop(i)
+      used.append(ch)
+
+      combos.append(''.join(used))
+
+      # Append the results of the 
+      # recursive call to our combos list
+      combos = combos + sub_routine(used, left)
+
+
+      # Remove ch from used
+      used.pop(-1)
+      # Splice ch back into left at its original index
+      left[i:0] = [ch]
+
+    return combos
+
+  return sub_routine([], list(string))
+
+def main():  
+  print string_permutations('ab')
+
+if __name__ == "__main__":  
+  main()
+</code></pre>
+
+<p>Knocking out a permutations algorithm always makes me feel like a recursive badass.</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Finding%20All%20Permutations%20of%20a%20String%20in%20Python&amp;url=http://localhost:2368/finding-all-permutations-of-a-string-in-python/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/finding-all-permutations-of-a-string-in-python/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/finding-all-permutations-of-a-string-in-python/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../streaming-files-from-s3-using-aws-cloudfront/">
+        <section class="post">
+            <h2>Streaming Files from S3 Using AWS Cloudfront</h2>
+            <p>For a recent project I was working on, we needed to host a bunch of audio files for our…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Lingua Franca</a> © 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=a6384e568a"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=a6384e568a"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=a6384e568a"></script> 
+
+</body>

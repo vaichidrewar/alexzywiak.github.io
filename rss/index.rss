@@ -1,4 +1,127 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Fri, 29 Jan 2016 17:04:14 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Streaming Files from S3 Using AWS Cloudfront</title><description>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation&lt;/p&gt;</description><link>http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/</link><guid isPermaLink="false">93e58cd9-3a03-486c-8b74-607695e4b098</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 27 Jan 2016 22:25:15 GMT</pubDate><content:encoded>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation &lt;a href="http://alexzywiak.github.io/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Mon, 01 Feb 2016 21:42:59 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Finding All Permutations of a String in Python</title><description>&lt;p&gt;In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string.&lt;/p&gt;
+
+&lt;p&gt;To lay it out:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;# Given string 'ab'
+# Permutation list ['a', 'ab', 'b', 'ba']
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a poster child for recursion.  To set it up, we'll&lt;/p&gt;</description><link>http://localhost:2368/finding-all-permutations-of-a-string-in-python/</link><guid isPermaLink="false">2602c66b-1b52-4ae4-89de-96d4416aa066</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Mon, 01 Feb 2016 21:42:19 GMT</pubDate><content:encoded>&lt;p&gt;In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string.&lt;/p&gt;
+
+&lt;p&gt;To lay it out:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;# Given string 'ab'
+# Permutation list ['a', 'ab', 'b', 'ba']
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a poster child for recursion.  To set it up, we'll have our primary function, &lt;code&gt;string_permutations&lt;/code&gt;, but also define a &lt;code&gt;subroutine&lt;/code&gt; that will do our recursive dirt work.  We'll also create a &lt;code&gt;combos&lt;/code&gt; list to hold onto our permutations.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;#!/usr/bin/env python -tt
+
+def string_permutations(string):
+
+  def sub_routine(...some args):
+    combos = []
+    return combos
+
+  return sub_routine(...some args)
+
+def main():  
+  # print string_permutations('ab')
+
+if __name__ == "__main__":  
+  main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We'll pass in two list arguments to &lt;code&gt;sub_routine&lt;/code&gt;.  The first will hold on to all the characters that we have 'used' so far, and the other will hold on to the characters that we still have left to use.  We can call &lt;code&gt;sub_routine&lt;/code&gt; in our parent function beginning with an empty list for 'used' characters, and a list made of all characters in the target string as the initial 'left' characters.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;...
+def sub_routine(used, left):  
+  combos = []
+  return combos
+
+return sub_routine([], list(string))  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Inside our &lt;code&gt;sub_routine&lt;/code&gt; function, we can begin generating our permutations. First, we'll loop through each index in the &lt;code&gt;left&lt;/code&gt; list.  Looping the index and not the character itself, will make it easier to manage the recursion later on.  Then, we'll remove the character from the &lt;code&gt;left&lt;/code&gt; list at that index and add it to the end of the &lt;code&gt;used&lt;/code&gt; list.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;used&lt;/code&gt; list will represent our permutation so far.  We're not implementing restrictions on the size of the permutations, so each iteration will represent a unique permutation.  We can then push that permutation to our &lt;code&gt;combos&lt;/code&gt; list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;...
+def sub_routine(used, left):  
+  combos = []
+
+  for i in range(0, len(left)):
+    ch = left.pop(i)
+    used.append(ch)
+
+    combos.append(''.join(used))
+
+
+  return combos
+
+return sub_routine([], list(string))  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now, here comes the fun part.  For each permutation we start building, we need to add on all combinations of remaining characters.  So let's get a little recursive.&lt;/p&gt;
+
+&lt;p&gt;What we'll do is pass in the new &lt;code&gt;used&lt;/code&gt; and &lt;code&gt;left&lt;/code&gt; lists to a recursive call to our &lt;code&gt;sub_routine&lt;/code&gt;.  Since our &lt;code&gt;sub_routine&lt;/code&gt; will return all of its subsequent permutations, we can concatenate the result of our recursive call with our &lt;code&gt;combos&lt;/code&gt; array.&lt;/p&gt;
+
+&lt;p&gt;The tricky part comes in after we make the recursive call.  We have to reset the contents of left and used so that when we continue on in the for loop, we can access the next character properly.&lt;/p&gt;
+
+&lt;p&gt;For example, on the first iteration of 'ab':  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;# First iteration: 
+# ch will equal 'a'
+# We will put 'a' into our used array as the first character.
+# All subsequent recursive calls down this path will have 'a' as the first character.
+# We finish the recursive chain, and replace 'a' in left and remove 'a' from used.
+
+
+#Second Iteration:
+# ch will equal 'b'
+# We will put 'b' into our used array as the first character.
+# All subsequent recursive calls down this path will have 'b' as the first character.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All of these steps will be repeated as part of the recursion with the result that each permutation will be visited.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-python"&gt;#!/usr/bin/env python -tt
+
+def string_permutations(string):
+
+  def sub_routine(used, left):
+
+    combos = []
+
+    for i in range(0, len(left)):
+      ch = left.pop(i)
+      used.append(ch)
+
+      combos.append(''.join(used))
+
+      # Append the results of the 
+      # recursive call to our combos list
+      combos = combos + sub_routine(used, left)
+
+
+      # Remove ch from used
+      used.pop(-1)
+      # Splice ch back into left at its original index
+      left[i:0] = [ch]
+
+    return combos
+
+  return sub_routine([], list(string))
+
+def main():  
+  print string_permutations('ab')
+
+if __name__ == "__main__":  
+  main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Knocking out a permutations algorithm always makes me feel like a recursive badass.&lt;/p&gt;</content:encoded></item><item><title>Streaming Files from S3 Using AWS Cloudfront</title><description>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation&lt;/p&gt;</description><link>http://localhost:2368/streaming-files-from-s3-using-aws-cloudfront/</link><guid isPermaLink="false">93e58cd9-3a03-486c-8b74-607695e4b098</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 27 Jan 2016 22:25:15 GMT</pubDate><content:encoded>&lt;p&gt;For a recent project I was working on, we needed to host a bunch of audio files for our web app and make them streamable to the client.  My original implementation made use of Nodejs streams to stream content hosted on S3 down to the client.  Check out that implementation &lt;a href="http://alexzywiak.github.io/streaming-audio-goodness-from-amazon-s3-to-the-clients-ears/"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;And then totally disregard that.  Very soon afterward, I discovered AWS Cloudfront which offers a much better way to host and stream files.  Cloudfront lets you associate a distribution with an existing S3 bucket and make select files streamable or generally available.&lt;/p&gt;
 
@@ -1726,37 +1849,4 @@ typeof drinkBeerBarney ===&amp;gt; 'function'
 getDrunk(drinkBeerBarney); ===&amp;gt; "Mmmm Barney likes Duff!"...x6  
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;So hopefully that will move you on your way toward some JS function binding context-fu mastery.  At least it should give you a hankering for a beer, so my job is done.&lt;/p&gt;</content:encoded></item><item><title>Setting Tab/Space Standards in Sublime Text</title><description>&lt;p&gt;An analogy for you; Properly indented code is to mixed spaces and tabs as  Oxford's English Dictionary is to a horde of tasmanian devils in a swimming pool full of scrabble letters.  &lt;/p&gt;
-
-&lt;p&gt;Yeah, properly indenting code is important.  It may look pretty in your editor, but on git or elsewhere&lt;/p&gt;</description><link>http://localhost:2368/setting-tab-space-standards-in-sublime-text/</link><guid isPermaLink="false">3e378150-39fe-414c-8a74-d32902fc2473</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Fri, 09 Oct 2015 21:13:33 GMT</pubDate><content:encoded>&lt;p&gt;An analogy for you; Properly indented code is to mixed spaces and tabs as  Oxford's English Dictionary is to a horde of tasmanian devils in a swimming pool full of scrabble letters.  &lt;/p&gt;
-
-&lt;p&gt;Yeah, properly indenting code is important.  It may look pretty in your editor, but on git or elsewhere out in the real world, it could look like a tangled mess if you're not consistent.&lt;/p&gt;
-
-&lt;p&gt;I'm going to cover how to change the default tab settings in Sublime.&lt;/p&gt;
-
-&lt;p&gt;To get going, navigate over to: &lt;br&gt;
-&lt;strong&gt;Sublime Text &gt; Preferences &gt; Settings - User&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;Settings in Sublime are controlled using JSON notation.  &lt;/p&gt;
-
-&lt;p&gt;While playing around in there, you can modify your tab settings with the following commands.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;"tab_size":Number&lt;/code&gt; &lt;br&gt;
-Set it equal to the number of spaces per tab. &lt;br&gt;
-Default value is 4.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;"translate_tabs_to_spaces":true/false&lt;/code&gt;
-If true, all tab keypresses will be recorded as the number of spaces specified in "tab_size" instead of a tab character.  Visually, the tab key will function the same, but there will be no tab characters whatsoever. &lt;br&gt;
-Default value is false.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;"use_tab_stops":true/false&lt;/code&gt;
-If true, will set tab and backspace to add/delete up to the closest tab stop regardless of whether it's a tab character or a series of spaces. &lt;br&gt;
-Defaults to true.&lt;/p&gt;
-
-&lt;p&gt;Here is an example of setting all tabs to be recorded as two spaces as per HR style guide.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;{
-  "tab_size":2,
-  "translate_tabs_to_spaces":true,
-  "use_tab_stops":true
-}&lt;/code&gt;&lt;/pre&gt;</content:encoded></item></channel></rss>
+&lt;p&gt;So hopefully that will move you on your way toward some JS function binding context-fu mastery.  At least it should give you a hankering for a beer, so my job is done.&lt;/p&gt;</content:encoded></item></channel></rss>
