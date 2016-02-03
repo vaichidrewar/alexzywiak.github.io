@@ -12,9 +12,9 @@
 
     <link rel="shortcut icon" href="../favicon.ico">
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=7defff887d" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=d84f85a72d" />
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
-		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=7defff887d" />
+		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=d84f85a72d" />
     <link rel="canonical" href="index.html" />
     <meta name="referrer" content="origin" />
     
@@ -24,7 +24,7 @@
     <meta property="og:description" content="Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there&#x27;s Bookshelf.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make..." />
     <meta property="og:url" content="http://localhost:2368/using-bookshelf-in-expressjs/" />
     <meta property="article:published_time" content="2016-02-03T19:34:43.762Z" />
-    <meta property="article:modified_time" content="2016-02-03T19:34:43.760Z" />
+    <meta property="article:modified_time" content="2016-02-03T22:18:29.133Z" />
     
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Using Bookshelf in ExpressJS" />
@@ -46,7 +46,7 @@
     "headline": "Using Bookshelf in ExpressJS",
     "url": "http://localhost:2368/using-bookshelf-in-expressjs/",
     "datePublished": "2016-02-03T19:34:43.762Z",
-    "dateModified": "2016-02-03T19:34:43.760Z",
+    "dateModified": "2016-02-03T22:18:29.133Z",
     "description": "Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there&#x27;s Bookshelf.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make..."
 }
     </script>
@@ -202,6 +202,8 @@ module.exports = db.model('User', User);
 
 <p>Finally, we export our model.  The specific syntax here is based on the registry plugin (which we set up in the <code>bookshelf.config.js</code> file).  As our models get more complex, through adding in many to many relationships and so on, we will need to include references to external models when we create each model.  Registry makes it cleaner to include outside models and gets rid of circular dependency issues.  Not an issue now, but a huge help as our data gets more complex.</p>
 
+<p>This is the basic form for our model.  To use it, just <code>require</code> it inside your express app, and you have access to all the <a href="http://bookshelfjs.org/#Model">model goodness</a> that comes with Bookshelf.</p>
+
 <p><strong>Testing Our Model</strong></p>
 
 <p>Testing.  It's like eating kale or exercising.  Something you know you should be doing, but would rather do later.  Likewise, a little investment now, will make you feel way better in the future.</p>
@@ -347,9 +349,9 @@ describe('User Route', function() {
     
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=7defff887d"></script>
-    <script type="text/javascript" src="../assets/js/index.js?v=7defff887d"></script>
-    <script type="text/javascript" src="../assets/js/prism.js?v=7defff887d"></script> 
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=d84f85a72d"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=d84f85a72d"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=d84f85a72d"></script> 
 
 </body>
 </html>
