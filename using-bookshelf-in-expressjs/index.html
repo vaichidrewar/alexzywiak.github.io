@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>Using Bookshelf in ExpressJS</title>
+    <meta name="description" content="" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=7defff887d" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=7defff887d" />
+    <link rel="canonical" href="index.html" />
+    <meta name="referrer" content="origin" />
+    
+    <meta property="og:site_name" content="Lingua Franca" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Using Bookshelf in ExpressJS" />
+    <meta property="og:description" content="Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there&#x27;s Bookshelf.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make..." />
+    <meta property="og:url" content="http://localhost:2368/using-bookshelf-in-expressjs/" />
+    <meta property="article:published_time" content="2016-02-03T19:34:43.762Z" />
+    <meta property="article:modified_time" content="2016-02-03T19:34:43.760Z" />
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Using Bookshelf in ExpressJS" />
+    <meta name="twitter:description" content="Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there&#x27;s Bookshelf.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make..." />
+    <meta name="twitter:url" content="http://localhost:2368/using-bookshelf-in-expressjs/" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Using Bookshelf in ExpressJS",
+    "url": "http://localhost:2368/using-bookshelf-in-expressjs/",
+    "datePublished": "2016-02-03T19:34:43.762Z",
+    "dateModified": "2016-02-03T19:34:43.760Z",
+    "description": "Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there&#x27;s Bookshelf.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7" />
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html" />
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../index.html">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.html">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Using Bookshelf in ExpressJS</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-02-03">03 February 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's <a href="http://bookshelfjs.org/">Bookshelf</a>.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL database. But as with anything in code, it takes a little investment in time and research before you can reap those benefits.</p>
+
+<p>I'm going to go through how to set up Bookshelf, connect it with an ExpressJS app, and how to set up a model.</p>
+
+<p><strong>Structuring The Application</strong></p>
+
+<p>I won't go into how to set up an Express app and getting your server running, but the application architecture I'm going to use will look like this.</p>
+
+<pre><code>├── index.js
+├── knexfile.js
+├── package.json
+└── server
+    ├── collections
+    │   └── users.js
+    ├── config
+    │   └── bookshelf.config.js
+    ├── controllers
+    │   └── userController.js
+    ├── models
+    │   └── user.js
+    ├── routes
+    │   └── userRouter.js
+    └── server.js
+</code></pre>
+
+<p>In addition to Express and its dependencies, make sure and install <code>bookshelf</code> and <code>knex</code> and <code>mysql</code> using <code>npm</code>.</p>
+
+<pre><code>npm install --save knex bookshelf mysql  
+</code></pre>
+
+<p><strong>Connecting Bookshelf</strong></p>
+
+<p>The next step is to hook our app up to Bookshelf.  Bookshelf is based on the <a href="http://knexjs.org/">Knex</a> query builder.  We will need to first configure Knex as it is what will be managing the connection to our database.  Knex also allows us to run migrations to set up our tables and our schemas.  If you're interested in a walkthrough of how to run migrations in Knex, or if the next section makes no sense at all, check out my post here.</p>
+
+<p>Otherwise, make sure you have a file containing the connection information for Knex to reference.  Mine is set up as <code>knexfile.js</code> in the root directory and looks like this:</p>
+
+<pre><code class="language-javascript">// knexfile.js
+var db = (process.env.NODE_ENV === 'test') ? 'bookshelf_test' : 'bookshelf'
+
+module.exports = {
+
+  client: 'mysql',
+  connection: {
+    host: '127.0.0.1',
+    user: 'root',
+    password: '',
+    database: db,
+    charset: 'utf8'
+  },
+  pool: {
+    min: 2,
+    max: 10
+  },
+  migrations: {
+    tableName: 'knex_migrations'
+  }
+
+};
+</code></pre>
+
+<p>I've set it up to use MySQL, but you can use which ever <a href="http://knexjs.org/#Installation-client">SQL flavor you prefer</a>. Likewise, make sure your database is set up with a <code>users</code> table with the necessary columns.  Here is my schema written out with Knex.</p>
+
+<pre><code class="language-javascript">knex.schema.createTable('users', function(table){  
+      table.increments('id').primary();
+      table.string('email').notNullable();
+      table.string('password').notNullable();
+      table.string('name');
+    })
+</code></pre>
+
+<p>Once that is all put together, we'll create a file which will configure and initialize Bookshelf for us.  My file lives in the <code>server/config/bookshelf.config.js</code> file.</p>
+
+<pre><code class="language-javascript">// bookshelf.config.js
+
+var knex = require('knex')(require('../../knexfile'));
+
+var Bookshelf = require('bookshelf')(knex);
+
+Bookshelf.plugin('registry');
+
+module.exports = Bookshelf;  
+</code></pre>
+
+<p>The first line grabs Knex and feeds it our configuration file so it can set up a connection to the database.  Next, we initialize Bookshelf by passing in our knex instance.  I have opted to use the <a href="https://github.com/tgriesser/bookshelf/wiki/Plugin:-Model-Registry">registry plugin for Bookshelf</a>  to make it easier to prevent model dependency issues.  Then, we export the whole thing.</p>
+
+<p><strong>Creating a User Model</strong></p>
+
+<p>Models are the heart and soul of Bookshelf.  They give a convenient Object Oriented interface to allow you to manage the contents of your database.  They also make it much easier to manage the various relationship types in MySQL; many to many etc.  I'm going to save all the foreign key fun for another post.  Here, I'll create a simple model without any external relationships.</p>
+
+<p>In our models directory, we'll create a file called <code>user.js</code> to hold on to our user model.</p>
+
+<pre><code class="language-javascript">// user.js
+
+var Bookshelf = require('../config/bookshelf.config');
+
+var User = Bookshelf.Model.extend({
+
+  tableName: 'users'
+
+});
+
+module.exports = db.model('User', User);  
+</code></pre>
+
+<p>First, we import the <code>Bookshelf</code> instance we set up earlier through our <code>bookshelf.config.js</code> file.  </p>
+
+<p>As bookshelf's syntax is based on backbonejs, we extend the bookshelf model and, at minimum, tell bookshelf which database table to save the information on.</p>
+
+<p>Finally, we export our model.  The specific syntax here is based on the registry plugin (which we set up in the <code>bookshelf.config.js</code> file).  As our models get more complex, through adding in many to many relationships and so on, we will need to include references to external models when we create each model.  Registry makes it cleaner to include outside models and gets rid of circular dependency issues.  Not an issue now, but a huge help as our data gets more complex.</p>
+
+<p><strong>Testing Our Model</strong></p>
+
+<p>Testing.  It's like eating kale or exercising.  Something you know you should be doing, but would rather do later.  Likewise, a little investment now, will make you feel way better in the future.</p>
+
+<p>Let's write out some tests to make sure our models work. I like using <code>mocha</code> as a test framework and <code>chai</code> as my assertion library.  Make sure and install them as dev dependencies.</p>
+
+<pre><code>npm install --save-dev mocha chai  
+</code></pre>
+
+<p>Then in <code>package.json</code> add the following script so we can easily run <code>npm test</code>.  </p>
+
+<pre><code>"scripts": {
+    "test": "./node_modules/.bin/mocha"
+  },
+</code></pre>
+
+<p>Next, let's add a <code>test</code> directory in our root directory and add in a file called <code>userModel.spec.js</code>.  Mocha will look for a <code>test</code> directory by default and try and run *.js files inside of it.</p>
+
+<pre><code class="language-javascript">// userModel.spec.js
+
+process.env.NODE_ENV = 'test';
+
+var expect = require('chai').expect;  
+var knex = require('knex')(require('../knexfile'));
+
+var User = require('../server/models/user');
+
+describe('User Route', function() {  
+// Testing goodness goes here
+});
+</code></pre>
+
+<p>To ensure that I'm working with a clean database, and to clean it out for subsequent tests, I'm going to use knex migrations.  While not necessary, it makes it a lot easier to setup and teardown the testing database while working on it.  Again check out my post here for more on migrations.</p>
+
+<p><code>beforeEach</code> will clear out the database using <code>knex.migrate.rollback</code>, then reapply our table schemas using <code>knex.migrate.latest</code>.  Finally, we'll make sure and clear out the database by using <code>rollback</code> again in our <code>after</code> function.</p>
+
+<pre><code>// userModel.spec.js
+...
+describe('User Route', function() {  
+  beforeEach(function(done) {
+    return knex.migrate.rollback()
+      .then(function() {
+        return knex.migrate.latest()
+      })
+      .then(function() {
+        done();
+      });
+  });
+
+  after(function (done) {
+    return knex.migrate.rollback()
+      .then(function(){
+        done();
+      });
+  });
+});
+</code></pre>
+
+<p>Our model is pretty simple at this point, so I'll just write two tests.  One as a sanity check to make sure that the model is working correctly and we have an empty database and the second to make sure we can save a model and then access it on the database.</p>
+
+<pre><code class="language-javscript">    it('should not have any models', function (done) {
+      User.forge().fetch().then(function(results){
+        expect(results).to.equal(null);
+        done()
+      });
+    });
+
+    it('should save a model to the database', function (done) {
+      var user = new User({
+        email: 'test@test.com',
+        password: 'defconbravo',
+        name: 'Yossarian'
+      }).save()
+      .then(function(){
+        return User.where({email: 'test@test.com'}).fetch();
+      })
+      .then(function(user){
+        expect(user.get('name')).to.equal('Yossarian');
+        done();
+      });
+    });
+</code></pre>
+
+<p>In the terminal run <code>npm test</code> and, hopefully, everything should be happily running along.</p>
+
+<p>There is a basic example of how to set up a bookshelf model and test it out.  In a later post, I hope to go through how to model more complex relationships using Bookshelf.</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/index.html">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/index.html">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Using%20Bookshelf%20in%20ExpressJS&amp;url=http://localhost:2368/using-bookshelf-in-expressjs/"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/using-bookshelf-in-expressjs/"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/using-bookshelf-in-expressjs/"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../running-migrations-with-knex/index.html">
+        <section class="post">
+            <h2>Running Migrations with Knex</h2>
+            <p>Knex can take a lot of the grunt work out of working with SQL databases in NodeJS.  On example&hellip;</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../index.html">Lingua Franca</a> &copy; 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=7defff887d"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=7defff887d"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=7defff887d"></script> 
+
+</body>
+</html>

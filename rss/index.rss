@@ -1,4 +1,332 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Mon, 01 Feb 2016 21:42:59 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Finding All Permutations of a String in Python</title><description>&lt;p&gt;In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 03 Feb 2016 19:34:52 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Using Bookshelf in ExpressJS</title><description>&lt;p&gt;Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's &lt;a href="http://bookshelfjs.org/"&gt;Bookshelf&lt;/a&gt;.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL&lt;/p&gt;</description><link>http://localhost:2368/using-bookshelf-in-expressjs/</link><guid isPermaLink="false">e265951b-fa68-44eb-83e8-042f7214452e</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 03 Feb 2016 19:34:43 GMT</pubDate><content:encoded>&lt;p&gt;Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's &lt;a href="http://bookshelfjs.org/"&gt;Bookshelf&lt;/a&gt;.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL database. But as with anything in code, it takes a little investment in time and research before you can reap those benefits.&lt;/p&gt;
+
+&lt;p&gt;I'm going to go through how to set up Bookshelf, connect it with an ExpressJS app, and how to set up a model.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Structuring The Application&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I won't go into how to set up an Express app and getting your server running, but the application architecture I'm going to use will look like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;├── index.js
+├── knexfile.js
+├── package.json
+└── server
+    ├── collections
+    │   └── users.js
+    ├── config
+    │   └── bookshelf.config.js
+    ├── controllers
+    │   └── userController.js
+    ├── models
+    │   └── user.js
+    ├── routes
+    │   └── userRouter.js
+    └── server.js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In addition to Express and its dependencies, make sure and install &lt;code&gt;bookshelf&lt;/code&gt; and &lt;code&gt;knex&lt;/code&gt; and &lt;code&gt;mysql&lt;/code&gt; using &lt;code&gt;npm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm install --save knex bookshelf mysql  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Connecting Bookshelf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The next step is to hook our app up to Bookshelf.  Bookshelf is based on the &lt;a href="http://knexjs.org/"&gt;Knex&lt;/a&gt; query builder.  We will need to first configure Knex as it is what will be managing the connection to our database.  Knex also allows us to run migrations to set up our tables and our schemas.  If you're interested in a walkthrough of how to run migrations in Knex, or if the next section makes no sense at all, check out my post here.&lt;/p&gt;
+
+&lt;p&gt;Otherwise, make sure you have a file containing the connection information for Knex to reference.  Mine is set up as &lt;code&gt;knexfile.js&lt;/code&gt; in the root directory and looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// knexfile.js
+var db = (process.env.NODE_ENV === 'test') ? 'bookshelf_test' : 'bookshelf'
+
+module.exports = {
+
+  client: 'mysql',
+  connection: {
+    host: '127.0.0.1',
+    user: 'root',
+    password: '',
+    database: db,
+    charset: 'utf8'
+  },
+  pool: {
+    min: 2,
+    max: 10
+  },
+  migrations: {
+    tableName: 'knex_migrations'
+  }
+
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I've set it up to use MySQL, but you can use which ever &lt;a href="http://knexjs.org/#Installation-client"&gt;SQL flavor you prefer&lt;/a&gt;. Likewise, make sure your database is set up with a &lt;code&gt;users&lt;/code&gt; table with the necessary columns.  Here is my schema written out with Knex.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;knex.schema.createTable('users', function(table){  
+      table.increments('id').primary();
+      table.string('email').notNullable();
+      table.string('password').notNullable();
+      table.string('name');
+    })
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once that is all put together, we'll create a file which will configure and initialize Bookshelf for us.  My file lives in the &lt;code&gt;server/config/bookshelf.config.js&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// bookshelf.config.js
+
+var knex = require('knex')(require('../../knexfile'));
+
+var Bookshelf = require('bookshelf')(knex);
+
+Bookshelf.plugin('registry');
+
+module.exports = Bookshelf;  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first line grabs Knex and feeds it our configuration file so it can set up a connection to the database.  Next, we initialize Bookshelf by passing in our knex instance.  I have opted to use the &lt;a href="https://github.com/tgriesser/bookshelf/wiki/Plugin:-Model-Registry"&gt;registry plugin for Bookshelf&lt;/a&gt;  to make it easier to prevent model dependency issues.  Then, we export the whole thing.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Creating a User Model&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Models are the heart and soul of Bookshelf.  They give a convenient Object Oriented interface to allow you to manage the contents of your database.  They also make it much easier to manage the various relationship types in MySQL; many to many etc.  I'm going to save all the foreign key fun for another post.  Here, I'll create a simple model without any external relationships.&lt;/p&gt;
+
+&lt;p&gt;In our models directory, we'll create a file called &lt;code&gt;user.js&lt;/code&gt; to hold on to our user model.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// user.js
+
+var Bookshelf = require('../config/bookshelf.config');
+
+var User = Bookshelf.Model.extend({
+
+  tableName: 'users'
+
+});
+
+module.exports = db.model('User', User);  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, we import the &lt;code&gt;Bookshelf&lt;/code&gt; instance we set up earlier through our &lt;code&gt;bookshelf.config.js&lt;/code&gt; file.  &lt;/p&gt;
+
+&lt;p&gt;As bookshelf's syntax is based on backbonejs, we extend the bookshelf model and, at minimum, tell bookshelf which database table to save the information on.&lt;/p&gt;
+
+&lt;p&gt;Finally, we export our model.  The specific syntax here is based on the registry plugin (which we set up in the &lt;code&gt;bookshelf.config.js&lt;/code&gt; file).  As our models get more complex, through adding in many to many relationships and so on, we will need to include references to external models when we create each model.  Registry makes it cleaner to include outside models and gets rid of circular dependency issues.  Not an issue now, but a huge help as our data gets more complex.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Testing Our Model&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Testing.  It's like eating kale or exercising.  Something you know you should be doing, but would rather do later.  Likewise, a little investment now, will make you feel way better in the future.&lt;/p&gt;
+
+&lt;p&gt;Let's write out some tests to make sure our models work. I like using &lt;code&gt;mocha&lt;/code&gt; as a test framework and &lt;code&gt;chai&lt;/code&gt; as my assertion library.  Make sure and install them as dev dependencies.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm install --save-dev mocha chai  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then in &lt;code&gt;package.json&lt;/code&gt; add the following script so we can easily run &lt;code&gt;npm test&lt;/code&gt;.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;"scripts": {
+    "test": "./node_modules/.bin/mocha"
+  },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, let's add a &lt;code&gt;test&lt;/code&gt; directory in our root directory and add in a file called &lt;code&gt;userModel.spec.js&lt;/code&gt;.  Mocha will look for a &lt;code&gt;test&lt;/code&gt; directory by default and try and run *.js files inside of it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// userModel.spec.js
+
+process.env.NODE_ENV = 'test';
+
+var expect = require('chai').expect;  
+var knex = require('knex')(require('../knexfile'));
+
+var User = require('../server/models/user');
+
+describe('User Route', function() {  
+// Testing goodness goes here
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To ensure that I'm working with a clean database, and to clean it out for subsequent tests, I'm going to use knex migrations.  While not necessary, it makes it a lot easier to setup and teardown the testing database while working on it.  Again check out my post here for more on migrations.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;beforeEach&lt;/code&gt; will clear out the database using &lt;code&gt;knex.migrate.rollback&lt;/code&gt;, then reapply our table schemas using &lt;code&gt;knex.migrate.latest&lt;/code&gt;.  Finally, we'll make sure and clear out the database by using &lt;code&gt;rollback&lt;/code&gt; again in our &lt;code&gt;after&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// userModel.spec.js
+...
+describe('User Route', function() {  
+  beforeEach(function(done) {
+    return knex.migrate.rollback()
+      .then(function() {
+        return knex.migrate.latest()
+      })
+      .then(function() {
+        done();
+      });
+  });
+
+  after(function (done) {
+    return knex.migrate.rollback()
+      .then(function(){
+        done();
+      });
+  });
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our model is pretty simple at this point, so I'll just write two tests.  One as a sanity check to make sure that the model is working correctly and we have an empty database and the second to make sure we can save a model and then access it on the database.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javscript"&gt;    it('should not have any models', function (done) {
+      User.forge().fetch().then(function(results){
+        expect(results).to.equal(null);
+        done()
+      });
+    });
+
+    it('should save a model to the database', function (done) {
+      var user = new User({
+        email: 'test@test.com',
+        password: 'defconbravo',
+        name: 'Yossarian'
+      }).save()
+      .then(function(){
+        return User.where({email: 'test@test.com'}).fetch();
+      })
+      .then(function(user){
+        expect(user.get('name')).to.equal('Yossarian');
+        done();
+      });
+    });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the terminal run &lt;code&gt;npm test&lt;/code&gt; and, hopefully, everything should be happily running along.&lt;/p&gt;
+
+&lt;p&gt;There is a basic example of how to set up a bookshelf model and test it out.  In a later post, I hope to go through how to model more complex relationships using Bookshelf.&lt;/p&gt;</content:encoded></item><item><title>Running Migrations with Knex</title><description>&lt;p&gt;Knex can take a lot of the grunt work out of working with SQL databases in NodeJS.  On example is using Knex' migration functionality to set up and modify your table setup.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set up a knexfile&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;First step to getting started is to globally install knex.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm install -g knex&lt;/code&gt;&lt;/pre&gt;</description><link>http://localhost:2368/running-migrations-with-knex/</link><guid isPermaLink="false">85ba9569-0777-4873-962b-c8392b4ff17c</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 03 Feb 2016 02:41:44 GMT</pubDate><content:encoded>&lt;p&gt;Knex can take a lot of the grunt work out of working with SQL databases in NodeJS.  On example is using Knex' migration functionality to set up and modify your table setup.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Set up a knexfile&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;First step to getting started is to globally install knex.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm install -g knex  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next inside your root directory, run:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;knex init  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will set up a &lt;code&gt;knexfile.js&lt;/code&gt; which will hang on to the configuration information for setting up your SQL db.  In this case, I'm going to wire it up to use MySQL.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// Update with your config settings.
+
+module.exports = {
+
+  development: {
+    client: 'mysql',
+    connection: {
+      host: '127.0.0.1',
+      user: 'root',
+      password: '',
+      database: '&amp;lt;YOUR TEST DB NAME&amp;gt;',
+      charset: 'utf8'
+    }
+  },
+
+  staging: {
+    ...
+  },
+
+  production: {
+    ...
+  }
+
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the &lt;code&gt;knexfile&lt;/code&gt; you have the option of altering your configurations depending on your environment.  When running your migrations, you have the option of passing a &lt;code&gt;--env&lt;/code&gt; flag in command line to specify which environment you want to use. ie:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;knex migrate:latest --env production  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For this example, I'll just write in an example using a local MySQL database.  The default &lt;code&gt;knexfile&lt;/code&gt; is a good reference, and you can check out more about configuring the connection in the &lt;a href="http://knexjs.org/#Installation-client"&gt;Knex docs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Creating a Migration&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;After setting up your &lt;code&gt;knexfile.js&lt;/code&gt; to incorporate your preferred SQL flavor, pop open your terminal and point it to your project's root directory.&lt;/p&gt;
+
+&lt;p&gt;In there, run:  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;knex migrate:make setup  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will create a &lt;code&gt;migrations&lt;/code&gt; directory and place a a migration file inside of it.&lt;/p&gt;
+
+&lt;p&gt;Open up that file and add something like the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;exports.up = function(knex, Promise) {  
+  return Promise.all([
+    knex.schema.createTable('users', function(table){
+      table.string('username');
+      table.string('password');
+      table.timestamps();
+    })
+  ])
+};
+
+exports.down = function(knex, Promise) {  
+  return Promise.all([
+    knex.schema.dropTable('users');
+  ])
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each migration is expecting two functions on its API, &lt;code&gt;up&lt;/code&gt; and &lt;code&gt;down&lt;/code&gt;.  &lt;code&gt;up&lt;/code&gt; is called when the migration is applied, and &lt;code&gt;down&lt;/code&gt; is called on a migration rollback.&lt;/p&gt;
+
+&lt;p&gt;In those functions you can use any of &lt;a href="http://knexjs.org/#Schema"&gt;Knex' Schema Functions&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;To make it easier to run rollbacks, your &lt;code&gt;down&lt;/code&gt; function should 'undo' your &lt;code&gt;up&lt;/code&gt; function.  In this case, because we are creating a table in &lt;code&gt;up&lt;/code&gt;, we need to remove that table in &lt;code&gt;down&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To apply your new migration, in the terminal, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;knex migrate:latest  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Updated Your Tables&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To make a change to your tables, create another migration.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;knex migrate:make step1  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the new migration file, you can make changes to your table, again making use of any of Knex' schema functions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;exports.up = function(knex, Promise) {  
+  return Promise.all([
+    knex.schema.table('users', function(table){
+      table.string('twitter');
+    })
+  ])
+};
+
+exports.down = function(knex, Promise) {  
+  return Promise.all([
+    knex.schema.table('users', function(table){
+      table.dropColumn('twitter');
+    })
+  ])
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here because we add a new column in &lt;code&gt;up&lt;/code&gt;, we'll remove it in &lt;code&gt;down&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rollback&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To remove the changes we've made so far, in the terminal run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;knex migrate:rollback  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All the migrations you've made will be rolled back.&lt;/p&gt;
+
+&lt;p&gt;Using Knex' migrate functionality, creating and modifying your table schemas is a lot easier.  So unless you really dig writing out longhand SQL statements, Knex will make your life a lot easier.  &lt;/p&gt;</content:encoded></item><item><title>Finding All Permutations of a String in Python</title><description>&lt;p&gt;In my quest to learn the intricacies of Python, I came across one of my favorite algorithms; finding all the possible permutations of a string.&lt;/p&gt;
 
 &lt;p&gt;To lay it out:  &lt;/p&gt;
 
@@ -1669,184 +1997,4 @@ All this code is well and good, but it needs a final line of d3 magic to work.  
 &lt;pre&gt;&lt;code class="language-javascript"&gt;d3.timer(moveTriangle);  
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Toss that little line in there, and have fun!  d3's &lt;code&gt;timer&lt;/code&gt; method will tie our &lt;code&gt;moveTriangle&lt;/code&gt; function smoothly into the internal gears and cogs of it's time keeping mechanisms.  It will now be run continuously and keep referencing the &lt;code&gt;keyPressed&lt;/code&gt; object for an updated look at which keys the user is pressing and then appropriately telling our little yellow triangle where to go.&lt;/p&gt;</content:encoded></item><item><title>Setting Up Sublime Linter in Sublime Text 3</title><description>&lt;p&gt;Syntax errors suck.  They're pretty much like the worst.  We've all been there.  You have a moment of transcendental inspiration, you hack out some of the most erudite, lucid code you've ever created, hit save, and wait for the fruits of your flawless genius to unfold.  But then everything comes&lt;/p&gt;</description><link>http://localhost:2368/setting-up-sublime-linter-in-sublime-text-3/</link><guid isPermaLink="false">42911685-2cd7-4bc9-bc52-06e8bd4289cc</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Thu, 15 Oct 2015 17:09:18 GMT</pubDate><content:encoded>&lt;p&gt;Syntax errors suck.  They're pretty much like the worst.  We've all been there.  You have a moment of transcendental inspiration, you hack out some of the most erudite, lucid code you've ever created, hit save, and wait for the fruits of your flawless genius to unfold.  But then everything comes crashing down around you like a flaming house of cards hitting a fan, or something roughly equivalent.  The culprit?  Some misplaced comma on line 238 that takes you an hour and half to find.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Enter Sublime Linter&lt;/strong&gt;.  Catch those malevolent little errors before they illicit any hair pulling.  &lt;/p&gt;
-
-&lt;p&gt;Installation is simple, but has a few steps.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Step One - Install SublimeLinter Package&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;If you have Package Manager installed on Sublime &lt;code&gt;cmd + shift + p&lt;/code&gt; and open that sucker up.  &lt;/p&gt;
-
-&lt;p&gt;(If you don't, time to get out from under the Subliminal Rock &lt;a src="https://packagecontrol.io/"&gt;packagemanager.io&lt;/a&gt;)  &lt;/p&gt;
-
-&lt;p&gt;Got to: &lt;code&gt;Package Control: Install Package --&gt; SublimeLinter&lt;/code&gt; and install it.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Step Two - Install Linters&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;SublimeLinter alone, as the Package Control Messages page emphatically states, doesn't do anything.  In order to get at the lintfree goodness that is clean code, you have to install language specific linters first.&lt;/p&gt;
-
-&lt;p&gt;In this case, we'll go ahead and install jshint to act as our linter.&lt;/p&gt;
-
-&lt;p&gt;Back in package manager: &lt;code&gt;Package Control: Install Package --&gt; SublimeLinter-jshint&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;On the new Package Control Messages Page, at the bottom you will have a new section referring specifically to jshint.  &lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Step Three - Install jshint node package&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;We're getting there, one more step to get this working!  jshint makes use of a Node package that must be installed separately on your machine.&lt;/p&gt;
-
-&lt;p&gt;If you have &lt;code&gt;node&lt;/code&gt; and &lt;code&gt;npm&lt;/code&gt; on your computer already, run the following command to install jshint globally so SublimeLinter can get at it.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;npm install -g jshint&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;If you have no idea what this node stuff is all about, check out more detailed instructions here. &lt;br&gt;
-&lt;a src="https://github.com/SublimeLinter/SublimeLinter-jshint"&gt;https://github.com/SublimeLinter/SublimeLinter-jshint&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;At this point you should be up and running!  Head into a .js file in Sublime, type out the most heinous syntax errors you can think of, and bask in their yellow outlined ostracism!  &lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Step Four - Changing JShint Configuration&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;So you're psyched, your totally free of unwanted lintyness, but your JSHint isn't playing nice with jQuery.  It especially doesn't like '$' which, it correctly although rather narrowly, tells you is not defined.  &lt;/p&gt;
-
-&lt;p&gt;To change the linting configuration, you need to add a file called &lt;code&gt;.jshintrc&lt;/code&gt; into your project folder. &lt;/p&gt;
-
-&lt;p&gt;The file allows you to use object notation to customize the way Jshint works.  For example, to stop any errors on the jQuery '$' object, enter  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;{  
-  "globals": {
-      "$": false
-  }
-}&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;For your reference, here is a full list of options that can be modified in the &lt;code&gt;.jshintrc&lt;/code&gt; file.&lt;/p&gt;
-
-&lt;p&gt;&lt;a src="http://jshint.com/docs/options/"&gt;http://jshint.com/docs/options/&lt;/a&gt;&lt;/p&gt;</content:encoded></item><item><title>In a .bind about how to .apply .call?</title><description>&lt;p&gt;You can really tell the True JS Ninjas from the Codeacademicians when it comes to proper use of &lt;code&gt;.call()&lt;/code&gt;, &lt;code&gt;.apply()&lt;/code&gt;, and &lt;code&gt;.bind()&lt;/code&gt;.  &lt;/p&gt;
-
-&lt;p&gt;All three are methods available on the JS &lt;code&gt;function&lt;/code&gt; prototype and are used to &lt;strong&gt; reassign the value of &lt;code&gt;this&lt;/code&gt; within the calling function.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;The three functions differ in&lt;/p&gt;</description><link>http://localhost:2368/in-a-bind-about-how-apply-call/</link><guid isPermaLink="false">e806b939-3b5f-4e75-9843-96ae903a86e1</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Mon, 12 Oct 2015 00:08:39 GMT</pubDate><content:encoded>&lt;p&gt;You can really tell the True JS Ninjas from the Codeacademicians when it comes to proper use of &lt;code&gt;.call()&lt;/code&gt;, &lt;code&gt;.apply()&lt;/code&gt;, and &lt;code&gt;.bind()&lt;/code&gt;.  &lt;/p&gt;
-
-&lt;p&gt;All three are methods available on the JS &lt;code&gt;function&lt;/code&gt; prototype and are used to &lt;strong&gt; reassign the value of &lt;code&gt;this&lt;/code&gt; within the calling function.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;The three functions differ in how they accept arguments, in the case of &lt;code&gt;.call()&lt;/code&gt; and &lt;code&gt;.apply()&lt;/code&gt;, and whether they invoke the function or return a new function, as in the case of &lt;code&gt;.bind()&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;As with all things code, it is much easier to explain in an example.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var homer = {  
-    name: 'Homer',
-    catchPhrase : 'D\'Oh!',
-    activity : function(){
-      console.log('Mmmm ' + this.name + ' likes Duff!');
-    }
-};
-
-var barney = {  
-    name: 'Barney',
-    catchPhrase : 'Buuuuurp!'
-};
-
-var speak = function(greeting1, greeting2){  
-    greeting = greeting1 + greeting2 || '';
-    console.log(greeting + this.catchPhrase);
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As you can see, Homer and Barney are gregarious guys.  They need to be able to speak!  But, oh no!  &lt;code&gt;speak()&lt;/code&gt; is not a native function to either of them!  &lt;code&gt;this.catchphrase&lt;/code&gt; is doomed to be &lt;code&gt;undefined!&lt;/code&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;speak() ==&amp;gt; undefined  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;strong&gt;.call()&lt;/strong&gt; &lt;br&gt;
-&lt;code&gt;.call(context, arg1, arg2...)&lt;/code&gt; &lt;br&gt;
-The first argument that &lt;code&gt;.call()&lt;/code&gt; accepts will be what is bound to the &lt;code&gt;this&lt;/code&gt; keyword inside the function.&lt;/p&gt;
-
-&lt;p&gt;Here, &lt;code&gt;homer&lt;/code&gt; is passed as the first argument to &lt;code&gt;.call()&lt;/code&gt; and so &lt;code&gt;homer&lt;/code&gt; becomes bound as &lt;code&gt;this&lt;/code&gt; within the &lt;code&gt;speak()&lt;/code&gt; function.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;speak.call(homer) ==&amp;gt; "D'Oh!"  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Subsequent arguments can be passed into &lt;code&gt;.call()&lt;/code&gt; and they will be passed to the calling function.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;speak.call(homer, 'Hi, Marge! ', ' Hi, Barney! ') ==&amp;gt; "Hi, Marge! Hi, Barney! D'Oh!"  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;strong&gt;.apply()&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;.apply(context, [arg list])&lt;/code&gt; &lt;br&gt;
-&lt;code&gt;.apply()&lt;/code&gt; works in almost the same way as &lt;code&gt;.call()&lt;/code&gt;.  The only difference between the two is the type of arguments they accept.  &lt;code&gt;.apply()&lt;/code&gt; will accept a single array or array-like object containing all of the arguments to be passed, whereas &lt;code&gt;.call()&lt;/code&gt; accepts a comma separated list.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;speak.apply(barney, ['Hi Moe! ', 'Hey Homer!']); ==&amp;gt; "Hi Moe! Hey Homer! Buuuuurp!"  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Notice how the values in the array object passed into &lt;code&gt;.apply()&lt;/code&gt; will be passed in order as the parameters to the calling function.&lt;/p&gt;
-
-&lt;p&gt;The real place these function methods shine through is you can call non-native methods bound to different objects without having to set them as properties on those objects.&lt;/p&gt;
-
-&lt;p&gt;Homer loves drinking beer.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var homer = {  
-    name: 'Homer',
-    catchPhrase : 'D\'Oh!',
-    drinkBeer : function(){
-      console.log('Mmmm ' + this.name + ' likes Duff!');
-    }
-};
-
-homer.drinkBeer(); ===&amp;gt; "Mmmm Homer likes Duff!"  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;But Barney loves drinking beer, too!  But he doesn't have a &lt;code&gt;.drinkBeer()&lt;/code&gt; method. How can Homer share his favorite activity?&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;homer.drinkBeer.call(barney); ===&amp;gt; "Mmmm Barney likes Duff!"  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The same function is called, &lt;code&gt;homer.drinkBeer()&lt;/code&gt;, but by using &lt;code&gt;.call()&lt;/code&gt; we can change the context to bind &lt;code&gt;this&lt;/code&gt; to &lt;code&gt;barney&lt;/code&gt; instead.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;.bind()&lt;/strong&gt; &lt;br&gt;
-&lt;code&gt;.bind(context, arg1, arg2....)&lt;/code&gt; &lt;br&gt;
-&lt;code&gt;.bind()&lt;/code&gt; has a similar function, but works in a fundamentally different way.  &lt;code&gt;.apply()&lt;/code&gt; and &lt;code&gt;.call()&lt;/code&gt; both &lt;em&gt;invoke&lt;/em&gt; the calling function when they are called.  &lt;code&gt;.bind()&lt;/code&gt; &lt;strong&gt;returns a function reference&lt;/strong&gt; with the &lt;code&gt;this&lt;/code&gt; keyword properly bound.&lt;/p&gt;
-
-&lt;p&gt;When Homer and Barney are at Moe's Tavern, they rarely stop at one.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var getDrunk = function(cb){  
-    for(var i = 0; i &amp;lt; 6; i++){
-        cb();
-    }
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;.getDrunk()&lt;/code&gt; accepts a callback and runs it six times.  Sounds like a good way to &lt;code&gt;.drinkBeer()&lt;/code&gt;!&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;getDrunk(homer.drinkBeer); ===&amp;gt; "Mmmm Homer likes Duff!"...x6  
-getDrunk(homer.drinkBeer.call(barney)); ===&amp;gt; undefined...x6  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;.call()&lt;/code&gt; and &lt;code&gt;.apply()&lt;/code&gt; invoked the function when they are called and don't return anything so they cannot be used when a function reference is required.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;.bind()&lt;/code&gt; will return a reference to a new function with the&lt;code&gt;this&lt;/code&gt; keyword context properly bound.  It accepts additional arguments the same way as &lt;code&gt;.call()&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Huh... &lt;br&gt;
-&lt;code&gt;fn.bind(context, arg1, arg2....)&lt;/code&gt; will return the following function.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;function(){  
-  return fn.call(context, arg1, arg2....);
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So Barney can get cranked at Moe's too!  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;getDrunk(homer.drinkBeer.bind(barney); ===&amp;gt; "Mmmm Barney likes Duff!"...x6  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;.bind()&lt;/code&gt; acts as a closure, so it will create a new function and return a reference to it.  If you need to use that bound function multiple times, you can save it as a variable with all the properly bound &lt;code&gt;this&lt;/code&gt; goodness you could want.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var drinkBeerBarney = homer.drinkBeer.bind(barney);
-
-typeof drinkBeerBarney ===&amp;gt; 'function'
-
-getDrunk(drinkBeerBarney); ===&amp;gt; "Mmmm Barney likes Duff!"...x6  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So hopefully that will move you on your way toward some JS function binding context-fu mastery.  At least it should give you a hankering for a beer, so my job is done.&lt;/p&gt;</content:encoded></item></channel></rss>
+&lt;p&gt;Toss that little line in there, and have fun!  d3's &lt;code&gt;timer&lt;/code&gt; method will tie our &lt;code&gt;moveTriangle&lt;/code&gt; function smoothly into the internal gears and cogs of it's time keeping mechanisms.  It will now be run continuously and keep referencing the &lt;code&gt;keyPressed&lt;/code&gt; object for an updated look at which keys the user is pressing and then appropriately telling our little yellow triangle where to go.&lt;/p&gt;</content:encoded></item></channel></rss>
