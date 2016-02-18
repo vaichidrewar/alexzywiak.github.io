@@ -1,4 +1,221 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Wed, 03 Feb 2016 22:18:40 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Using Bookshelf in ExpressJS</title><description>&lt;p&gt;Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's &lt;a href="http://bookshelfjs.org/"&gt;Bookshelf&lt;/a&gt;.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL&lt;/p&gt;</description><link>http://localhost:2368/using-bookshelf-in-expressjs/</link><guid isPermaLink="false">e265951b-fa68-44eb-83e8-042f7214452e</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 03 Feb 2016 19:34:43 GMT</pubDate><content:encoded>&lt;p&gt;Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's &lt;a href="http://bookshelfjs.org/"&gt;Bookshelf&lt;/a&gt;.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL database. But as with anything in code, it takes a little investment in time and research before you can reap those benefits.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Lingua Franca</title><description>Javascript</description><link>http://localhost:2368/</link><generator>Ghost 0.7</generator><lastBuildDate>Thu, 18 Feb 2016 01:18:08 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Using JWTs with Bookshelf and Angular</title><description>&lt;p&gt;With the advent of Single Page Applications, server side authentication doesn't quite cut it anymore.  JSON Web Tokens are a handy way to bridge the gap.&lt;/p&gt;
+
+&lt;p&gt;At a high level overview, a JWT is an encoded bundle of JSON data, generally representing a user, signed and encoded by the server.&lt;/p&gt;</description><link>http://localhost:2368/using-jwts-with-bookshelf-and-angular/</link><guid isPermaLink="false">ce3d207d-697e-4f58-ae0b-92a9ed0bdfd6</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Thu, 18 Feb 2016 01:17:58 GMT</pubDate><content:encoded>&lt;p&gt;With the advent of Single Page Applications, server side authentication doesn't quite cut it anymore.  JSON Web Tokens are a handy way to bridge the gap.&lt;/p&gt;
+
+&lt;p&gt;At a high level overview, a JWT is an encoded bundle of JSON data, generally representing a user, signed and encoded by the server.  Each JWT is usually composed of three parts.  A header, a payload, and a signature.  The header contains relevant information regarding the encoding type as well as identifying the JSON as a web token.  The payload can be whatever JSON data you choose, generally user information.  The signature is built off a 'secret' key stored on the server.  The JWT holds onto this signature and it can be checked to make sure the JWT is the real deal.  All this is regular, old JSON, that is then encoded and sent down to the client.  Read more about JWTs &lt;a href="https://jwt.io/introduction/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The general use case for JWTs is for user authentication.  On a successful login, the JWT is sent down from the server and is stored on the client.  Whenever the client wishes to take a restricted action on the server, the JWT is sent up with the request.  The JWT is verified on the server, and if everything passes, the client is allowed to take the requested action.&lt;/p&gt;
+
+&lt;p&gt;The beauty of the JWT is is accessible on the client, which makes it useful for SPAs.  The server only needs to be queried to get a new token or to take serve side actions. The client can block certain frontend routes be checking if a JWT is present or not.  In addition, the JWT is also encoded JSON, so its data can be referenced to grab user information without having to query the server again.&lt;/p&gt;
+
+&lt;p&gt;In this post, I'll walk through the relevant parts of a JWT implementation I put through on a recent project.  The full project made use of &lt;strong&gt;Angular&lt;/strong&gt; on the frontend, &lt;strong&gt;Express&lt;/strong&gt; as a server framework and &lt;strong&gt;Bookshelf&lt;/strong&gt; as my database ORM.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;JWTs on the Server&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I opted to put all the JWT logic into an &lt;code&gt;authController.js&lt;/code&gt; file and export it as a module.  I used the &lt;a href="https://github.com/auth0/node-jsonwebtoken"&gt;jsonwebtoken&lt;/a&gt; npm module for handling the nitty gritty as well as &lt;code&gt;lodash&lt;/code&gt; for some data manipulation.&lt;/p&gt;
+
+&lt;p&gt;Importing the secret is also a crucial part.  The secret is a string of my creation which is used to build the JWT's signature and is essential when encoding or decoding a token.  I hid my secret away in a nicely gitignored module to keep it private and then I export it wherever necessary throughout the server.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;// authController.js
+
+var jwt = require('jsonwebtoken');  
+var _ = require('lodash');
+
+var secret = require('../config/auth.config').secret;
+
+module.exports = {  
+  authenticate: function(req, res, next){
+    //...
+  },
+  createToken: function(user) {
+    //...
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two functions being exposed in &lt;code&gt;authController.js&lt;/code&gt;.  The first, &lt;code&gt;createToken&lt;/code&gt; does just that.  Given a user object, in this case the user object is user data from the database, it will create and return a signed JWT token with an expiration.  Tokens are easily decoded, so never send sensitive information with them!  At minimum, omit the password.  More on JWT security later.  This token will be sent down to the client to be stored and attached to later requests.  Check out more about how to use the JWT module &lt;a href="https://github.com/auth0/node-jsonwebtoken"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  ...
+  createToken: function(user) {
+    return jwt.sign(_.omit(user.attributes, 'password'), secret, {
+      expiresIn: 24 * 60 * 60
+    });
+  }
+ ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;authenticate&lt;/code&gt; function is where the server side magic happens.  &lt;code&gt;authenticate&lt;/code&gt; acts as an Express middleware function and can be easily placed on any routes you need to restrict access to.&lt;/p&gt;
+
+&lt;p&gt;The function has two main jobs.  First, to check if a JWT exists on the &lt;code&gt;request&lt;/code&gt; object passing through the middleware, and second to verify against my app's secret that it has a valid signature.  If everything passes, the token is authentic, the &lt;code&gt;next()&lt;/code&gt; function is called, and the &lt;code&gt;request&lt;/code&gt; passes on to the next middleware.  If the JWT is not found or is invalid, an error response is sent to the client, and subsequent server actions are denied.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  ...
+  authorize: function(req, res, next) {
+    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (token) {
+      jwt.verify(token, secret, function(err, decoded) {
+        if (err) {
+          console.error(err);
+          return res.status(403).send('error authorizing token');
+        } else {
+          req.token = decoded;
+          return next();
+        }
+      });
+    } else {
+      console.error('not authorized');
+      return res.sendStatus(403);
+    }
+  },
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next step, is to place the &lt;code&gt;authenticate&lt;/code&gt; middleware function on any restricted routes.  This will force any requests going through that route to pass authentication in order complete any actions.  Express' &lt;code&gt;.get&lt;/code&gt; and &lt;code&gt;.post&lt;/code&gt; convenience functions take any number of middleware callback functions as arguments, so we can just stick our &lt;code&gt;authenticate&lt;/code&gt; function as the first callback argument, and the actual action as the second callback function.&lt;/p&gt;
+
+&lt;p&gt;Here's an example from my &lt;code&gt;userRouter.js&lt;/code&gt; file.  It shows an unrestricted and restricted route.  I'll need to import my &lt;code&gt;auth&lt;/code&gt; module which we created above.  &lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  var auth = require('../controllers/authController');
+  ...
+  // Get all users - Unrestricted Route
+  app.get('/', userController.getAllUsers);
+
+  // Get user by id - Restricted Route
+  app.get('/:id', auth.authorize, userController.getUserById);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the &lt;code&gt;jsonwebtoken&lt;/code&gt; npm module and setting up a some middleware and helper functions, it's very straightforward to get up and running with server side user authentication using JWTs.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;JWTs Client Side&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;JWTs can be used to restrict client side routes.  Keep in mind that this is not entirely fool proof as these tokens are accessible to anyone in local storage and easily decoded.  Make sure not to store sensitive information, especially passwords, in JWTs and to keep any really sensitive information and actions exclusively on the server.&lt;/p&gt;
+
+&lt;p&gt;That said, they are a very convenient way to have a user logged in and to restrict frontend routes the average user can visit.&lt;/p&gt;
+
+&lt;p&gt;I used Angular on the frontend of my project and saved all relevant authentication logic in an &lt;code&gt;Auth&lt;/code&gt; service.  &lt;/p&gt;
+
+&lt;p&gt;For brevity, I'll exclude the factory specific code. I wrote a number of helper functions, but they all revolve around saving the token to local storage, and checking if it exists to see if the user is logged in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  // auth.js
+  ...
+  const storageKey = 'village.id_token';
+
+  /**
+   * Checks if a user has a token
+   * @return {[boolean]} [if user is authorized]
+   */
+  const authorized = () =&amp;gt; {
+    return !!getToken();
+  };
+
+  /**
+   * Returns raw jwt from local storage
+   * @return {[string]} [returns token or false if doesn't exist]
+   */
+  const getToken = () =&amp;gt; {
+    return $window.localStorage.getItem(storageKey) || false;
+  }
+
+  /**
+   * Save raw token to local storage.  Returns decoded token
+   * @param  {[string]} token [jwt to save]
+   * @return {[object]}       [decoded jwt]
+   */
+  const saveToken = (token) =&amp;gt; {
+    $window.localStorage.setItem(storageKey, token);
+    return decodeToken();
+  }
+
+  /**
+   * Deletes jwt from storage
+   * @return {[boolean]} [true]
+   */
+  const logOut = () =&amp;gt; {
+    $window.localStorage.removeItem(storageKey);
+    loggedInUser = null;
+    return true;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With the token in storage, we can decode it and access the data it contains.  In this case, I was using it to hold on to user specific information.  To easily decode the tokens, I included &lt;a href="https://github.com/auth0/angular-jwt"&gt;angular-jwt&lt;/a&gt; and injected &lt;code&gt;jwtHelper&lt;/code&gt; as a dependency into my service. I wrote in a helper function to handle decoding the token stored in local storage.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  // auth.js
+  ...
+  /**
+   * Decodes raw jwt and returns payload
+   * @return {[object]} [returns decoded payload]
+   */
+  const decodeToken = () =&amp;gt; {
+    let token = getToken();
+    if (token) {
+      return jwtHelper.decodeToken(token);
+    } else {
+      return false;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By making use of these functions, it's easy to save a new token when a user logs in, to check if a user is already logged in, and get information about that user by decoding an existing token.&lt;/p&gt;
+
+&lt;p&gt;In order for the user to take actions on the server, this token must be sent up with any outgoing request.  This allows the server to securely verify if the user is logged in with a valid JWT and subsequently allowed to take restricted server side actions.  With jQuery and ajax, it's a matter of adding the token as a header.  For Angular, it's possible to automatically attach the token on any outgoing requests by making use of &lt;code&gt;$httpProvider.interceptors&lt;/code&gt;.  The 'interceptors' is an array of factories, or factory style callbacks, exposing function methods to be run on http requests and responses.  In this case, we're only interested in outgoing requests, so we'll only define a single method, &lt;code&gt;request&lt;/code&gt; on our factory.  This configuration is done on the main module declaration in my Angular app.&lt;/p&gt;
+
+&lt;p&gt;Check out more about &lt;code&gt;$httpProvider.interceptors&lt;/code&gt; &lt;a href="https://docs.angularjs.org/api/ng/service/$http#interceptors"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;...
+// Set up JWT authentication
+.config(['$httpProvider', function($httpProvider){
+
+    // Intercept outgoing http requests and attach jwt token
+    $httpProvider.interceptors.push('AttachJWT');
+}])
+
+.factory('AttachJWT', ['$window', function($window){
+
+    return {
+        // Attach jwt token if it exists
+        request: (object) =&amp;gt; {
+            let jwt = $window.localStorage.getItem('village.id_token');
+            if(jwt){
+                object.headers['x-access-token'] = jwt;
+            }
+            object.headers['Allow-Control-Allow-Origin'] = '*';
+            return object;
+        }
+
+    };
+}])
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It's also possible to restrict users that are not logged in from accessing certain Angular routes.  By listening on the &lt;code&gt;$rootScope&lt;/code&gt; for a &lt;code&gt;$stateChangeStart&lt;/code&gt; event with &lt;code&gt;ui-router&lt;/code&gt;, or &lt;code&gt;$routeChangeStart&lt;/code&gt; with &lt;code&gt;ng-router&lt;/code&gt;, you can interrupt any restricted route changes if the user is not logged in.  &lt;/p&gt;
+
+&lt;p&gt;This implementation will check if the target state has an &lt;code&gt;authenticate&lt;/code&gt; property set to true.  If so, it will check if there is a JWT present on the client.  If there is a JWT, the route change continues, if not, the user is redirected back to the 'sign in' state.&lt;/p&gt;
+
+&lt;p&gt;The listener is set up in Angular's &lt;a href="http://stackoverflow.com/questions/20663076/angularjs-app-run-documentation"&gt;run block&lt;/a&gt; right after declaring and configuring the main module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  ...
+  .run(function($rootScope, $location, $state, Auth) {
+    $rootScope.$on('$stateChangeStart', function(evt, toState, toParams) {
+      if (toState &amp;amp;&amp;amp; toState.authenticate &amp;amp;&amp;amp; !Auth.authorized()) {
+        console.log('not logged in');
+        evt.preventDefault();
+        $state.go('signin');
+    }
+  });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;authenticate&lt;/code&gt; property can be placed on the state when it is declared.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-javascript"&gt;  $stateProvider.state('dashboard', {
+      url: '/dashboard/',
+      params: {
+          userId: null
+      },
+      template: '&amp;lt;dashboard&amp;gt;&amp;lt;/dashboard&amp;gt;',
+      authenticate: true
+    });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are the essential elements in creating a user authentication system using JWTs.  JWTs are a very convenient method to authenticate users in a modern SPA, although they do have their drawbacks.  This is a simple implementation that only checks for the existence of a JWT on the client and a valid signature on the server.  You must take precautions when using JWTs as they still present a number of security risks.  Read more about potential issues &lt;a href="https://docs.angularjs.org/api/ng/service/$http#interceptors"&gt;here&lt;/a&gt;.  &lt;/p&gt;
+
+&lt;p&gt;Despite that, they are a very convenient way to hang on to user data and authorization without having to constantly query the server.&lt;/p&gt;</content:encoded></item><item><title>Using Bookshelf in ExpressJS</title><description>&lt;p&gt;Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's &lt;a href="http://bookshelfjs.org/"&gt;Bookshelf&lt;/a&gt;.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL&lt;/p&gt;</description><link>http://localhost:2368/using-bookshelf-in-expressjs/</link><guid isPermaLink="false">e265951b-fa68-44eb-83e8-042f7214452e</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Wed, 03 Feb 2016 19:34:43 GMT</pubDate><content:encoded>&lt;p&gt;Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for the rest of us, there's &lt;a href="http://bookshelfjs.org/"&gt;Bookshelf&lt;/a&gt;.  A sweet ORM for NodeJS, Bookshelf can be a nice layer of abstraction to make our lives a lot easier when setting up a SQL database. But as with anything in code, it takes a little investment in time and research before you can reap those benefits.&lt;/p&gt;
 
 &lt;p&gt;I'm going to go through how to set up Bookshelf, connect it with an ExpressJS app, and how to set up a model.&lt;/p&gt;
 
@@ -1872,131 +2089,4 @@ update(frequencyData);
 
 &lt;p&gt;I'm such a nerd...&lt;/p&gt;
 
-&lt;p&gt;Full code up on &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;Git&lt;/a&gt;.&lt;/p&gt;</content:encoded></item><item><title>Animating Keyboard Events in d3</title><description>&lt;p&gt;d3 can do some serious data, but it is also a pretty sweet tool to animate user input.  &lt;/p&gt;
-
-&lt;p&gt;I'll give a little run through here on how to capture keyboard events to run a little animation.  Well, to drive a little triangle around the screen using the arrow keys. &lt;br&gt;
-&lt;br&gt; &lt;br&gt;
-&lt;strong&gt;Set&lt;/strong&gt;&lt;/p&gt;</description><link>http://localhost:2368/animating-keyboard-events-in-d3/</link><guid isPermaLink="false">764c6964-9c31-4a36-9e44-c95b4aec3a95</guid><dc:creator>Alex Zywiak</dc:creator><pubDate>Sun, 18 Oct 2015 23:24:20 GMT</pubDate><content:encoded>&lt;p&gt;d3 can do some serious data, but it is also a pretty sweet tool to animate user input.  &lt;/p&gt;
-
-&lt;p&gt;I'll give a little run through here on how to capture keyboard events to run a little animation.  Well, to drive a little triangle around the screen using the arrow keys. &lt;br&gt;
-&lt;br&gt; &lt;br&gt;
-&lt;strong&gt;Set Up SVG&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;First, we need an element to hold our d3 goodness, so we'll append an &lt;code&gt;svg&lt;/code&gt; element onto the body and set its default dimensions.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var svg = d3.select('body')  
-  .append('svg')
-  .attr('height', 600)
-  .attr('width', 1000);
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, we'll add in a triangle polygon that will eventually be controlled by the arrow keys.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var triangle = svg.append('polygon')  
-  .attr('fill', 'yellow')
-  .attr('stroke', 'blue')
-  .attr('stroke-width', 2)
-  .attr('points', "0, 30 0, 0 40, 15 ");
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We have a little yellow triangle, but it's stuck way up in the corner.  Let's start it out in the center of the svg element instead.  To make storing and referencing the triangles position easier, we'll add some relevant properties to the &lt;code&gt;triangle&lt;/code&gt; object using &lt;code&gt;underscore&lt;/code&gt;'s &lt;code&gt;extend&lt;/code&gt; method.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;_.extend(triangle, {  
-  x: 500,
-  y: 300,
-  angle: 0,
-  _speed: 10
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This sets the triangle's &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; values &lt;code&gt;500&lt;/code&gt; and &lt;code&gt;300&lt;/code&gt; respectively, or what is the middle of our current svg.  These coordinates are meaningless properties until we actually place the triangle using the &lt;code&gt;transform&lt;/code&gt; attribute provided to us by d3.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;triangle.attr('transform', function() {  
-  return 'translate(' + triangle.x + ',' + triangle.y + ')';
-})
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;At this point, we have a pretty little triangle that is still tragically static.  Let's get our little tripartite friend moving! &lt;br&gt;
-&lt;br&gt; &lt;br&gt;
-&lt;strong&gt;Catching Key Events&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;The first thing we're going to do to get some movement, is to set up capturing keyboard events.  d3 has a very straightforward method to do so.  Unfortunately, it is only useful for catching single keys being pressed at a time.  We're going to expand it a little so we can react to multiple keys pressed at once, in this case to model diagonal movement.&lt;/p&gt;
-
-&lt;p&gt;To do so, we're going to put watchers on both the &lt;code&gt;keydown&lt;/code&gt; and &lt;code&gt;keyup&lt;/code&gt; events.  To store which keys are being pressed, we'll create an object &lt;code&gt;keyPressed&lt;/code&gt;.  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var keyPressed = {};
-
-d3.select('body')  
-  .on('keydown', function() {
-    keyPressed[d3.event.keyIdentifier] = true;
-  })
-  .on('keyup', function() {
-    keyPressed[d3.event.keyIdentifier] = false;
-  });
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;With this in place, every &lt;code&gt;keydown&lt;/code&gt; event will store that event's &lt;code&gt;keyIdentifier&lt;/code&gt; as the property name in the &lt;code&gt;keyPressed&lt;/code&gt; object and set its value to &lt;code&gt;true&lt;/code&gt;.  On a keydown event, the corresponding &lt;code&gt;keyIdentifier&lt;/code&gt; will reset it to &lt;code&gt;false&lt;/code&gt;.  With this setup, we can monitor all keys that are being pressed simultaneously. &lt;br&gt;
-&lt;br&gt; &lt;br&gt;
-&lt;strong&gt;Gettin' Our Move On&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;So far we have a stationary triangle and some code that tells me what buttons I'm pushing. Great.  Not too exciting yet, but we'll get there, I promise.&lt;/p&gt;
-
-&lt;p&gt;In order to set and manipulate our triangle's position, we're going to use the &lt;code&gt;transform/translate&lt;/code&gt; property of svg &lt;code&gt;polygons&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;We'll create a &lt;code&gt;moveTriangle&lt;/code&gt; function to monitor our keypresses and to change the triangle's &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; properties to appropriately respond to the arrow keys.  &lt;code&gt;moveTriangle&lt;/code&gt; will reference the &lt;code&gt;keyPressed&lt;/code&gt; object to find out what keys are currently being pressed.  We'll also add a helper function &lt;code&gt;isInBounds&lt;/code&gt; to make sure no one is flying off the screen.  (You may wonder how we're going to reference &lt;code&gt;keyPressed&lt;/code&gt; in real time, but don't worry, d3 will come through in the end.)  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;var moveTriangle = function() {
-
-  var x = triangle.x;
-  var y = triangle.y;
-
-  if (keyPressed['Left']) {
-    triangle.x = isInBounds(x - triangle._speed, 'width');
-  }
-  if (keyPressed['Up']) {
-    triangle.y = isInBounds(y - triangle._speed, 'height');
-  }
-  if (keyPressed['Right']) {
-    triangle.x = isInBounds(x + triangle._speed, 'width');
-  }
-  if (keyPressed['Down']) {
-    triangle.y = isInBounds(y + triangle._speed, 'height');
-  }
-  triangle.move(x, y);
-};
-
-var isInBounds = function(n, dimension) {  
-  if (n &amp;lt; 0) {
-    return 0;
-  } else if (n &amp;gt; svg.attr(dimension)) {
-    return svg.attr(dimension);
-  } else {
-    return n;
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;moveTriangle&lt;/code&gt; effectively translates the arrow keys into new &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; coordinates on the &lt;code&gt;triangle&lt;/code&gt; object, but again, we need to make use of &lt;code&gt;translate&lt;/code&gt; to actually move the triangle on the screen.  On the last line in &lt;code&gt;moveTriangle&lt;/code&gt; we reference a &lt;code&gt;move&lt;/code&gt; method on triangle.  Let's write that now.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;triangle.move = function(x, y) {  
-  var dx = this.x - x;
-  var dy = this.y - y;
-  if (dx !== 0 || dy !== 0) {
-    this.angle = 360 * (Math.atan2(dy, dx) / (Math.PI * 2));
-  }
-  triangle.attr('transform', function() {
-    return 'rotate(' + [this.angle, this.x + 20, this.y + 15].join() + ')' +
-      'translate(' + [this.x, this.y].join() + ')';
-  }.bind(this));
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Under the fancy trigonometry, this function's main purpose is to call d3's &lt;code&gt;attr&lt;/code&gt; method on our &lt;code&gt;triangle&lt;/code&gt; object and relay the appropriate position to the &lt;code&gt;translate&lt;/code&gt; attribute.  We also run some fancy math to keep track of where our triangle is pointing just to keep things interesting. &lt;br&gt;
-&lt;br&gt; &lt;br&gt;
-&lt;strong&gt;Animate!&lt;/strong&gt; &lt;br&gt;
-All this code is well and good, but it needs a final line of d3 magic to work.  As it stands, we keep track of what keys are pressed, but the &lt;code&gt;moveTriangle&lt;/code&gt; function isn't being called on! How will it know when the arrows are being pressed?  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-javascript"&gt;d3.timer(moveTriangle);  
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Toss that little line in there, and have fun!  d3's &lt;code&gt;timer&lt;/code&gt; method will tie our &lt;code&gt;moveTriangle&lt;/code&gt; function smoothly into the internal gears and cogs of it's time keeping mechanisms.  It will now be run continuously and keep referencing the &lt;code&gt;keyPressed&lt;/code&gt; object for an updated look at which keys the user is pressing and then appropriately telling our little yellow triangle where to go.&lt;/p&gt;</content:encoded></item></channel></rss>
+&lt;p&gt;Full code up on &lt;a href="https://github.com/alexzywiak/d3-Audio-Visualiser"&gt;Git&lt;/a&gt;.&lt;/p&gt;</content:encoded></item></channel></rss>

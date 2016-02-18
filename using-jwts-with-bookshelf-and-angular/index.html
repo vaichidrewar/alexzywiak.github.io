@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>Using JWTs with Bookshelf and Angular</title>
+    <meta name="description" content="" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=be1a9f40ab" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+		<link rel="stylesheet" type="text/css"  href="../assets/css/prism.css?v=be1a9f40ab" />
+    <link rel="canonical" href="index.html" />
+    <meta name="referrer" content="origin" />
+    
+    <meta property="og:site_name" content="Lingua Franca" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Using JWTs with Bookshelf and Angular" />
+    <meta property="og:description" content="With the advent of Single Page Applications, server side authentication doesn&#x27;t quite cut it anymore.  JSON Web Tokens are a handy way to bridge the gap. At a high level overview, a JWT is an encoded bundle of JSON data,..." />
+    <meta property="og:url" content="http://localhost:2368/using-jwts-with-bookshelf-and-angular/" />
+    <meta property="article:published_time" content="2016-02-18T01:17:58.418Z" />
+    <meta property="article:modified_time" content="2016-02-18T01:17:58.416Z" />
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Using JWTs with Bookshelf and Angular" />
+    <meta name="twitter:description" content="With the advent of Single Page Applications, server side authentication doesn&#x27;t quite cut it anymore.  JSON Web Tokens are a handy way to bridge the gap. At a high level overview, a JWT is an encoded bundle of JSON data,..." />
+    <meta name="twitter:url" content="http://localhost:2368/using-jwts-with-bookshelf-and-angular/" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Lingua Franca",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Zywiak",
+        "url": "http://localhost:2368/author/alex",
+        "sameAs": null,
+        "description": null
+    },
+    "headline": "Using JWTs with Bookshelf and Angular",
+    "url": "http://localhost:2368/using-jwts-with-bookshelf-and-angular/",
+    "datePublished": "2016-02-18T01:17:58.418Z",
+    "dateModified": "2016-02-18T01:17:58.416Z",
+    "description": "With the advent of Single Page Applications, server side authentication doesn&#x27;t quite cut it anymore.  JSON Web Tokens are a handy way to bridge the gap. At a high level overview, a JWT is an encoded bundle of JSON data,..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7" />
+    <link rel="alternate" type="application/rss+xml" title="Lingua Franca" href="../rss/index.html" />
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="../index.html">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="../rss/index.html">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Using JWTs with Bookshelf and Angular</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-02-17">17 February 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>With the advent of Single Page Applications, server side authentication doesn't quite cut it anymore.  JSON Web Tokens are a handy way to bridge the gap.</p>
+
+<p>At a high level overview, a JWT is an encoded bundle of JSON data, generally representing a user, signed and encoded by the server.  Each JWT is usually composed of three parts.  A header, a payload, and a signature.  The header contains relevant information regarding the encoding type as well as identifying the JSON as a web token.  The payload can be whatever JSON data you choose, generally user information.  The signature is built off a 'secret' key stored on the server.  The JWT holds onto this signature and it can be checked to make sure the JWT is the real deal.  All this is regular, old JSON, that is then encoded and sent down to the client.  Read more about JWTs <a href="https://jwt.io/introduction/">here</a>.</p>
+
+<p>The general use case for JWTs is for user authentication.  On a successful login, the JWT is sent down from the server and is stored on the client.  Whenever the client wishes to take a restricted action on the server, the JWT is sent up with the request.  The JWT is verified on the server, and if everything passes, the client is allowed to take the requested action.</p>
+
+<p>The beauty of the JWT is is accessible on the client, which makes it useful for SPAs.  The server only needs to be queried to get a new token or to take serve side actions. The client can block certain frontend routes be checking if a JWT is present or not.  In addition, the JWT is also encoded JSON, so its data can be referenced to grab user information without having to query the server again.</p>
+
+<p>In this post, I'll walk through the relevant parts of a JWT implementation I put through on a recent project.  The full project made use of <strong>Angular</strong> on the frontend, <strong>Express</strong> as a server framework and <strong>Bookshelf</strong> as my database ORM.</p>
+
+<p><strong>JWTs on the Server</strong></p>
+
+<p>I opted to put all the JWT logic into an <code>authController.js</code> file and export it as a module.  I used the <a href="https://github.com/auth0/node-jsonwebtoken">jsonwebtoken</a> npm module for handling the nitty gritty as well as <code>lodash</code> for some data manipulation.</p>
+
+<p>Importing the secret is also a crucial part.  The secret is a string of my creation which is used to build the JWT's signature and is essential when encoding or decoding a token.  I hid my secret away in a nicely gitignored module to keep it private and then I export it wherever necessary throughout the server.</p>
+
+<pre><code class="language-javascript">// authController.js
+
+var jwt = require('jsonwebtoken');  
+var _ = require('lodash');
+
+var secret = require('../config/auth.config').secret;
+
+module.exports = {  
+  authenticate: function(req, res, next){
+    //...
+  },
+  createToken: function(user) {
+    //...
+  }
+};
+</code></pre>
+
+<p>There are two functions being exposed in <code>authController.js</code>.  The first, <code>createToken</code> does just that.  Given a user object, in this case the user object is user data from the database, it will create and return a signed JWT token with an expiration.  Tokens are easily decoded, so never send sensitive information with them!  At minimum, omit the password.  More on JWT security later.  This token will be sent down to the client to be stored and attached to later requests.  Check out more about how to use the JWT module <a href="https://github.com/auth0/node-jsonwebtoken">here</a>.</p>
+
+<pre><code class="language-javascript">  ...
+  createToken: function(user) {
+    return jwt.sign(_.omit(user.attributes, 'password'), secret, {
+      expiresIn: 24 * 60 * 60
+    });
+  }
+ ...
+</code></pre>
+
+<p>The <code>authenticate</code> function is where the server side magic happens.  <code>authenticate</code> acts as an Express middleware function and can be easily placed on any routes you need to restrict access to.</p>
+
+<p>The function has two main jobs.  First, to check if a JWT exists on the <code>request</code> object passing through the middleware, and second to verify against my app's secret that it has a valid signature.  If everything passes, the token is authentic, the <code>next()</code> function is called, and the <code>request</code> passes on to the next middleware.  If the JWT is not found or is invalid, an error response is sent to the client, and subsequent server actions are denied.</p>
+
+<pre><code class="language-javascript">  ...
+  authorize: function(req, res, next) {
+    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (token) {
+      jwt.verify(token, secret, function(err, decoded) {
+        if (err) {
+          console.error(err);
+          return res.status(403).send('error authorizing token');
+        } else {
+          req.token = decoded;
+          return next();
+        }
+      });
+    } else {
+      console.error('not authorized');
+      return res.sendStatus(403);
+    }
+  },
+  ...
+</code></pre>
+
+<p>The next step, is to place the <code>authenticate</code> middleware function on any restricted routes.  This will force any requests going through that route to pass authentication in order complete any actions.  Express' <code>.get</code> and <code>.post</code> convenience functions take any number of middleware callback functions as arguments, so we can just stick our <code>authenticate</code> function as the first callback argument, and the actual action as the second callback function.</p>
+
+<p>Here's an example from my <code>userRouter.js</code> file.  It shows an unrestricted and restricted route.  I'll need to import my <code>auth</code> module which we created above.  </p>
+
+<pre><code class="language-javascript">  var auth = require('../controllers/authController');
+  ...
+  // Get all users - Unrestricted Route
+  app.get('/', userController.getAllUsers);
+
+  // Get user by id - Restricted Route
+  app.get('/:id', auth.authorize, userController.getUserById);
+</code></pre>
+
+<p>Using the <code>jsonwebtoken</code> npm module and setting up a some middleware and helper functions, it's very straightforward to get up and running with server side user authentication using JWTs.</p>
+
+<p><strong>JWTs Client Side</strong></p>
+
+<p>JWTs can be used to restrict client side routes.  Keep in mind that this is not entirely fool proof as these tokens are accessible to anyone in local storage and easily decoded.  Make sure not to store sensitive information, especially passwords, in JWTs and to keep any really sensitive information and actions exclusively on the server.</p>
+
+<p>That said, they are a very convenient way to have a user logged in and to restrict frontend routes the average user can visit.</p>
+
+<p>I used Angular on the frontend of my project and saved all relevant authentication logic in an <code>Auth</code> service.  </p>
+
+<p>For brevity, I'll exclude the factory specific code. I wrote a number of helper functions, but they all revolve around saving the token to local storage, and checking if it exists to see if the user is logged in.</p>
+
+<pre><code class="language-javascript">  // auth.js
+  ...
+  const storageKey = 'village.id_token';
+
+  /**
+   * Checks if a user has a token
+   * @return {[boolean]} [if user is authorized]
+   */
+  const authorized = () =&gt; {
+    return !!getToken();
+  };
+
+  /**
+   * Returns raw jwt from local storage
+   * @return {[string]} [returns token or false if doesn't exist]
+   */
+  const getToken = () =&gt; {
+    return $window.localStorage.getItem(storageKey) || false;
+  }
+
+  /**
+   * Save raw token to local storage.  Returns decoded token
+   * @param  {[string]} token [jwt to save]
+   * @return {[object]}       [decoded jwt]
+   */
+  const saveToken = (token) =&gt; {
+    $window.localStorage.setItem(storageKey, token);
+    return decodeToken();
+  }
+
+  /**
+   * Deletes jwt from storage
+   * @return {[boolean]} [true]
+   */
+  const logOut = () =&gt; {
+    $window.localStorage.removeItem(storageKey);
+    loggedInUser = null;
+    return true;
+  }
+</code></pre>
+
+<p>With the token in storage, we can decode it and access the data it contains.  In this case, I was using it to hold on to user specific information.  To easily decode the tokens, I included <a href="https://github.com/auth0/angular-jwt">angular-jwt</a> and injected <code>jwtHelper</code> as a dependency into my service. I wrote in a helper function to handle decoding the token stored in local storage.</p>
+
+<pre><code class="language-javascript">  // auth.js
+  ...
+  /**
+   * Decodes raw jwt and returns payload
+   * @return {[object]} [returns decoded payload]
+   */
+  const decodeToken = () =&gt; {
+    let token = getToken();
+    if (token) {
+      return jwtHelper.decodeToken(token);
+    } else {
+      return false;
+    }
+  }
+</code></pre>
+
+<p>By making use of these functions, it's easy to save a new token when a user logs in, to check if a user is already logged in, and get information about that user by decoding an existing token.</p>
+
+<p>In order for the user to take actions on the server, this token must be sent up with any outgoing request.  This allows the server to securely verify if the user is logged in with a valid JWT and subsequently allowed to take restricted server side actions.  With jQuery and ajax, it's a matter of adding the token as a header.  For Angular, it's possible to automatically attach the token on any outgoing requests by making use of <code>$httpProvider.interceptors</code>.  The 'interceptors' is an array of factories, or factory style callbacks, exposing function methods to be run on http requests and responses.  In this case, we're only interested in outgoing requests, so we'll only define a single method, <code>request</code> on our factory.  This configuration is done on the main module declaration in my Angular app.</p>
+
+<p>Check out more about <code>$httpProvider.interceptors</code> <a href="https://docs.angularjs.org/api/ng/service/$http#interceptors">here</a>.</p>
+
+<pre><code class="language-javascript">...
+// Set up JWT authentication
+.config(['$httpProvider', function($httpProvider){
+
+    // Intercept outgoing http requests and attach jwt token
+    $httpProvider.interceptors.push('AttachJWT');
+}])
+
+.factory('AttachJWT', ['$window', function($window){
+
+    return {
+        // Attach jwt token if it exists
+        request: (object) =&gt; {
+            let jwt = $window.localStorage.getItem('village.id_token');
+            if(jwt){
+                object.headers['x-access-token'] = jwt;
+            }
+            object.headers['Allow-Control-Allow-Origin'] = '*';
+            return object;
+        }
+
+    };
+}])
+</code></pre>
+
+<p>It's also possible to restrict users that are not logged in from accessing certain Angular routes.  By listening on the <code>$rootScope</code> for a <code>$stateChangeStart</code> event with <code>ui-router</code>, or <code>$routeChangeStart</code> with <code>ng-router</code>, you can interrupt any restricted route changes if the user is not logged in.  </p>
+
+<p>This implementation will check if the target state has an <code>authenticate</code> property set to true.  If so, it will check if there is a JWT present on the client.  If there is a JWT, the route change continues, if not, the user is redirected back to the 'sign in' state.</p>
+
+<p>The listener is set up in Angular's <a href="http://stackoverflow.com/questions/20663076/angularjs-app-run-documentation">run block</a> right after declaring and configuring the main module.</p>
+
+<pre><code class="language-javascript">  ...
+  .run(function($rootScope, $location, $state, Auth) {
+    $rootScope.$on('$stateChangeStart', function(evt, toState, toParams) {
+      if (toState &amp;&amp; toState.authenticate &amp;&amp; !Auth.authorized()) {
+        console.log('not logged in');
+        evt.preventDefault();
+        $state.go('signin');
+    }
+  });
+</code></pre>
+
+<p>The <code>authenticate</code> property can be placed on the state when it is declared.</p>
+
+<pre><code class="language-javascript">  $stateProvider.state('dashboard', {
+      url: '/dashboard/',
+      params: {
+          userId: null
+      },
+      template: '&lt;dashboard&gt;&lt;/dashboard&gt;',
+      authenticate: true
+    });
+</code></pre>
+
+<p>There are the essential elements in creating a user authentication system using JWTs.  JWTs are a very convenient method to authenticate users in a modern SPA, although they do have their drawbacks.  This is a simple implementation that only checks for the existence of a JWT on the client and a valid signature on the server.  You must take precautions when using JWTs as they still present a number of security risks.  Read more about potential issues <a href="https://docs.angularjs.org/api/ng/service/$http#interceptors">here</a>.  </p>
+
+<p>Despite that, they are a very convenient way to hang on to user data and authorization without having to constantly query the server.</p>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/alex/index.html">Alex Zywiak</a></h4>
+
+                    <p>Read <a href="../author/alex/index.html">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Using%20JWTs%20with%20Bookshelf%20and%20Angular&amp;url=http://localhost:2368/using-jwts-with-bookshelf-and-angular/"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/using-jwts-with-bookshelf-and-angular/"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/using-jwts-with-bookshelf-and-angular/"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../using-bookshelf-in-expressjs/index.html">
+        <section class="post">
+            <h2>Using Bookshelf in ExpressJS</h2>
+            <p>Apparently there are those among us who are really into writing SQL statements.  Good for you guys.  As for&hellip;</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../index.html">Lingua Franca</a> &copy; 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=be1a9f40ab"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=be1a9f40ab"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=be1a9f40ab"></script> 
+
+</body>
+</html>
