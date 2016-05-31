@@ -193,7 +193,7 @@ var User = Bookshelf.Model.extend({
 
 });
 
-module.exports = db.model('User', User);  
+module.exports = Bookshelf.model('User', User);  
 </code></pre>
 
 <p>First, we import the <code>Bookshelf</code> instance we set up earlier through our <code>bookshelf.config.js</code> file.  </p>
